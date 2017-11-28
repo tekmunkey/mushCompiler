@@ -1,0 +1,949 @@
+@@@@
+@@@@ Yes, these demonstrations are fairly simplistic pieces of MUSH code.  The purpose is to demo the compiler capabilities.
+@@@@
+
+@@ CDIR inc .\0x00.includeTest.inmsh
+
+@@
+@@ cVars are named variables that will persist throughout the entire codefile.
+@@
+@@ For a cVar demonstration, or cvDCOName is a cVar name and Demo Code Object is a cVar value.
+@@   * When naming cVars you MUST remember that you're dealing with MUSH code, not real, actual compiled code.  With literally every language that "compiles" (even the fake compiles 
+@@     like DotNET's MSIL, Python and LUA's bytecode, etc) your text-based code is literally going from a text encoding to some mostly numeric encoding.  With MUSH code, your text-based 
+@@     original code is being "compiled" to the exact same text encoding just in another FORMAT.  So if you use shorthand cVar names, you very probably will clobber real softcode at some point.
+@@   * The important thing to remember when choosing cVar names is that you want something memorable and something descriptive, and the real purpose of a compile-time variable is to have 
+@@     a value in 100 in-code positions that you don't have to hunt down and change manually - you just hunt down the declaration and change the value once, and the compiler changes the 
+@@     100 in-code references for you.
+@@
+@@ CDIR cVar cvDCOName = Demo Code Object
+@@
+@@ We're going to be referencing the function [v(demoCodeObject)] quite a bit, so let's use a cVar to make a macro so that
+@@ cvDCORef is a shorthand cVar name for demoCodeObject
+@@
+@@ At some point we may decide to change this to a direct dbref, we may decide to change the attribute residence to some other object (or change it to a global function), or whatever, 
+@@ and if or when we do that we would have to go through this entire codefile cautiously modifying every reference to the object.  OR we can use a named cVar and then if or when we 
+@@ make that change we only have to change the reference style once, on the cVar declaration line, recompile and upload the new code.
+@@
+@@ CDIR cVar cvDCORef = [v(demoCodeObject)]
+@@
+
+@@@@
+@@@@ Create the demo code object using think and side effect functions so the dbref may be set directly onto your player bit at the same time
+@@@@
+think 
+    [set
+    (
+        %!,
+        @@ demoCodeObject is the attribute name that will be set onto your player bit
+        @@ Using the full attribute name here because we're actually setting it onto the object in the database
+        demoCodeObject:
+        @@ codeObjectName is the cVar name we declared above in this code file
+        @@ When you look at the compiled output, this will have changed to 'Demo Code Object'
+        [create(cvDCOName,0)]
+    )]
+
+@@@@
+@@@@ Lock the demo code object to self (%! always returns the dbref of the object invoking the substitution)
+@@@@ Using the cVar name here because it's already set into the database - this is our macro reference to [v(demoCodeObject)] - the function call that retrieves the object's dbref
+@@@@
+@lock cvDCORef=%!
+
+@@@@
+@@@@ Uselock the demo code object
+@@@@
+@lock/use cvDCORef=%!
+
+@set cvDCORef=!HALT
+
+@@@@
+@@@@ For Penn and I think TinyMUSH
+@@@@
+@set cvDCORef=!NO_COMMAND
+
+@@@@
+@@@@ For TinyMUX
+@@@@
+@set cvDCORef=COMMANDS
+
+@@@@
+@@@@ Where capstr() simply capitalizes the first letter of the first word in a string (ie sentence or paragraph), the capWords function capitalizes each word in a phrase or each item in a 
+@@@@ delimited list.  This can be handy where you're creating a chargen system and you want your staffers to be able to lazily enter multi-word stat names without capitalizing them, but you 
+@@@@ want them to come out in storage in neatly capitalized format.
+@@@@
+@@@@ ie:  Your staffer types:  +stat/add lock picking
+@@@@      Your code stores:    Lock Picking
+@@@@
+@@@@ Usage:
+@@@@   u( fn-capWords, list, inputDelimiter, outputDelimiter )
+@@@@
+@@@@   ie: u(fn-capWords,lock picking,%b,%b) -> Lock Picking 
+@@@@   ie: u(fn-capWords,lock picking,%b,_) -> Lock_Picking
+@@@@
+@@
+@@ The params pre-processor directive is REALLY handy.  It defines named variables you can use in the context of this block of code only (where a block of code starts with a BEGIN BLOCK 
+@@ directive or with any text at all other than a blank line and the block ends on any END BLOCK directive or anywhere there's a blank line - there are exceptions to this where you 
+@@ explicitly specify a BEGIN BLOCK, but I won't go into that here).
+@@
+@@ Where you specify params, the position of each param name will be replaced within the codeblock with its position in the param array.  So in this example, list is %0, inputDelim is %1, 
+@@ and outputDelim is %2.  Where this really, really SHINES is whenever you decide to rename parameters, add or remove parameters.  All you have to do is modify the params directive and 
+@@ make sure you account for any references to the named parameter in the codeblock.  You don't have to go hunting for those obtuse references to %0 and %1 and %2.  You don't have to 
+@@ manually turn %2 into %1, when you remove parameters, or turn %2 into %3 and then %1 into %2 if you added a parameter between them.  THE COMPILER WILL DO THAT FOR YOU.  Neat, huh?
+@@
+@@ CDIR params ( list, inputDelim, outputDelim )
+@@
+&fn-capWords cvDCORef=iter(list,capstr(##),inputDelim,outputDelim)
+
+@@@@
+@@@@ Characters known to be accepted in MUSH passwords
+@@@@
+&var-passwdChars cvDCORef=! # & ' + - _ @ 0 1 2 3 4 5 6 7 8 9 A a B b C c D d E e F f G g H h I i J j K k L l M m N n O o P p Q q R r S s T t U u V v W w X x Y y Z z
+
+@@@@
+@@@@ Generates a random password using MUSH-friendly password characters.  Generated passwords will be between minLength and maxLength characters long.
+@@@@   * This function will not allow a minLength less than 4 or a maxLength less than 8, but will not error - it automatically adjusts null or invalid arguments.
+@@@@   * This function will not allow a maxLength less than minLength, but will not error - it automatically adjusts maxLength to be equal to minLength if 
+@@@@     the user supplies an invalid argument pair
+@@@@
+@@@@    USAGE:
+@@@@      u( fn-randPass, minLength, maxLength )
+@@@@
+@@@@      ie:  u(fn-randPass) -> SG_1X (5 characters)
+@@@@           * This works on PennMUSH 1.8.6p1rc1 but may not work on other MUSH platforms or Penn versions because functions declared with argument signatures 
+@@@@             commonly demand arguments in callouts (even if those arguments are blank, the platform demands a comma)
+@@@@           * In this case, the function automatically adjusts its arguments to minLength 4, maxLength 8
+@@@@      ie:  u(fn-randPass,,) -> O7-Dym (6 characters)
+@@@@           * This works on PennMUSH 1.8.6p1rc1 even with null_eq_zero = no
+@@@@           * In this case, the function automatically adjusts its arguments to minLength 4, maxLength 8
+@@@@      ie:  u(fn-randPass,12,6) -> @e'By&74vZ8p (12 characters)
+@@@@           * In this case, the function automatically adjusts its maxLength argument to 12, since maxLength may not be less than minLength.  Such calls will 
+@@@@             always return passwords of exactly minLength passwords since minLength and maxLength will be the same every time.
+@@@@      ie:  u(fn-randPass,8,12) -> em!VXfyEN (9 characters)
+@@@@           * This represents a syntactically and argumentatively perfect usage of the function.
+@@@@
+@@
+@@ CDIR params ( minLength, maxLength )
+@@
+&fn-randPass cvDCORef=
+    @@ get a register on passwdChars so we don't have to pull it repeatedly on each and every iteration
+    @@
+    @@ bVars are named variables that persist only throughout the current codeblock.  Once the compiler exits the fn-randPass block, bvPasswordChars will 
+    @@ no longer be a valid variable name during compilation.
+    @@
+    @@ CDIR bVar bvPasswordChars = %q8
+    [setq(8,v(var-passwdChars))]
+    @@ get a register on the count in the passwdChars for the same reason
+    @@
+    @@ CDIR bVar bvPWCharCount = %q9
+    @@
+    [setq(9,words(bvPasswordChars,%b))]
+    [iter
+    (
+        @@ randomly generated passwords will be between a randomly elected value at least minLength and at most maxLength characters long
+        lnum
+        (
+            1,
+            rand
+            (
+                @@ use max to ensure that we default to minLength 4 if the user lazily puts nothing or incorrectly puts less than 4
+                @@ 4 is a typical/safe assumption for minimum password length going back decades
+                max
+                (
+                    @@ specify 4 as our default minLength, in case null or 0 or less than 4 is supplied
+                    4,
+                    @@ test the specified minLength for null and default to 0 so we can default to 4 above as necessary
+                    if
+                    (
+                        not(minLength),
+                        @@ if not minLength evaluated to true so we default to 0
+                        0,
+                        @@ if not minLength evaluated to false so we return minLength
+                        minLength
+                    )
+                ),
+                @@ use max to ensure that we default to maxLength 8 if the user lazily puts nothing or incorrectly puts less than 8
+                @@ 8 is a typical/safe assumption for maximum password length going back decades
+                max
+                (
+                    @@ specify 8 as our default maxLength, in case null or 0 or less than 8 is supplied
+                    8,
+                    @@ test the specified maxLength for null and default to 0 so we can default to 8 above as necessary
+                    if
+                    (
+                        not(maxLength),
+                        @@ if not maxLength evaluated to true so we default to 0
+                        0,
+                        @@ if not maxLength evaluated to false we return maxLength
+                        maxLength
+                    ),
+                    @@ inside the max callout, repeat the minLength default assignment test
+                    @@ this way we ensure that maxLength is equal to or greater than minLength
+                    @@ ie:  we make sure some wiseass doesn't call randPass(12,6)
+                    if
+                    (
+                        not(minLength),
+                        @@ if not minLength evaluated to true so we default to 0
+                        0,
+                        @@ if not minLength evaluated to false so we return minLength
+                        minLength
+                    )
+                )
+            )
+        ),
+        elements
+        ( 
+            bvPasswordChars, 
+            rand
+            (
+                1,
+                bvPWCharCount
+            ),
+            %b
+        ),
+        %b,
+        @@ leaving this field (output separator) empty causes iter to run its output items together with no spaces or other character in between
+    )]
+
+@@@@
+@@@@ A command that calls out to the randPass function above to generate a random password between minLength and maxLength characters long.
+@@@@
+@@@@ USAGE:
+@@@@   +getRandPass minLength/MaxLength
+@@@@
+@@@@ See fn-randPass for return value info
+@@@@
+@@
+@@ CDIR params( minLength, maxLength )
+@@
+&cmd-getRandPass cvDCORef=$+getRandPass */*:@pemit %#=[u(fn-randPass,minLength,maxLength)];
+
+@@@@
+@@@@ A command-output error header for uniformity
+@@@@
+@@
+@@ CDIR params ( hdrText )
+@@
+&fn-hdrError cvDCORef=[ansi(hr,hdrText>%b%b)]
+
+@@@@
+@@@@ A command-output success header for uniformity
+@@@@
+@@
+@@ CDIR params ( hdrText )
+@@
+&fn-hdrSuccess cvDCORef=[ansi(hg,hdrText>%b%b)]
+
+@@@@
+@@@@ What follows is some sample code for a super-simple chargen prototype.  This is just the basic outline for defining Sheet Sections, ie the sections 
+@@@@ that stats reside in, and the stats themselves, then listing those sections and stats.
+@@@@
+@@@@ This is not a demonstration of MUSH code.  It's not intended for portability across MUSH platforms.  It's not even really meant to run or be useful as 
+@@@@ a chargen.  It's intended to demonstrate the features of the compiler in a real-world application, 
+@@@@
+
+@@@@
+@@@@ Contains a list of bad/forbidden characters that shall not be permitted in user-elected stat names and descriptions
+@@@@
+&var-restrictStatStringChars cvDCORef=| :
+
+@@@@
+@@@@ Retrieves a static informational message regarding restricted characters in sheet section and stat names.  This is essentially just a macro for ease and uniformity.
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getRestrictedCharMsg)
+@@@@
+&fn-getRestrictedCharMsg cvDCORef=
+    You must not use%b
+    @@ the %b at the end of the line above must be there, because otherwise the compiler would trim the line and butt this itemized list right
+    @@ up against it
+    @@ let's let the user know what characters not to use
+    [itemize
+    (
+        @@ escape these characters so they don't disappear, in case characters such as %, \, etc get added later
+        @@ hm... well, it WOULD be best practice to escape these characters, but for some reason PennMUSH decided to make the \ show up when 
+        @@ the next line of code was left in.  so... just don't use pipe delimiters I guess?  heh.  or else don't use delimiters that need 
+        @@ escaping.  EVER
+        @@escape(v(var-restrictStatStringChars)),
+        v(var-restrictStatStringChars),
+        @@ this should be a space-delimited list
+        %b,
+        @@ we should use the 'or' conjunction
+        or,
+        @@ and comma punctuation, which must be escaped or MUSH thinks it's an additional argument
+        \,
+    )]%b
+    in section or stat names.
+
+@@@@
+@@@@ Tests a given user input against the value of var-restrictStatStringChars to determine if the specified value is a valid stat name, for use as a sheetSection or sheetStat name or description.
+@@@@
+@@@@    USAGE:
+@@@@      u( fn-isGoodStatString, userString )
+@@@@
+@@@@ Returns 1 if the string is good/valid.  Otherwise 0.
+@@@@
+@@
+@@ CDIR params ( userString )
+@@
+&fn-isGoodStatString cvDCORef=
+    [not
+    (
+        iter
+        (
+            @@ iterate over the restricted character set
+            escape(v(var-restrictStatStringChars)),
+            if
+            (
+                @@ any match in user input means we can quit iterating
+                t(pos(##,userString)),
+                @@ the true return value is negated by the outermose not()
+                1
+                @@ the if would be unnecessary except that we do wish to break from iter if/when we reach a true eval
+                [ibreak()],
+                @@ the false return value must be NULL - Penn allows for 2-parameter if() but other MUSH platforms fail
+            ),
+            @@ input delimiter from the restrict attribute is %b
+            %b,
+            @@ output delimiter must be NULL
+        )
+    )]
+
+@@@@
+@@@@ A variable container attribute containing defined Sheet Sections.  This is effectively a one-dimensional array whose elements are pipe-delimited.
+@@@@
+&var-sheetSections cvDCORef=Attributes|Demographics|Perks|Skills
+
+@@@@
+@@@@ Retrieves the array index of a sheet section.  User input may either be an index number to test for validity or a partial/abbreviated case-insensitive section name.
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getSectionIndex, sheetSection)
+@@@@
+@@@@ Returns the array index number of the sheet section where the section name will be found in the sheetSections attribute and/or where the section stats list 
+@@@@ will be found in sheetStats, or returns 0 if the input index is outside the bounds of the section array or if the section name does not match any defined 
+@@@@ section name.
+@@@@
+@@
+@@ CDIR params( prmSheetSection )
+@@
+&fn-getSectionIndex cvDCORef=
+    [if
+    (
+        @@ testing if %0 is an index number
+        isnum(prmSheetSection),
+        @@ %0 is an index number, not a string/section name
+        if
+        (
+            @@ cand tests each of its internal operators in turn, exiting with a false return when any evaluate to false
+            cand
+            (
+                @@ test to ensure that the numeric input is gtr 0
+                gt(prmSheetSection,0),
+                @@ test to ensure that the numeric input is lte the actual number of defined sheetSections
+                lte(prmSheetSection,words(v(var-sheetSections),|)),
+                @@ and double-check that the number of sections in sheetStats agrees
+                lte(prmSheetSection,words(v(var-sheetStats),|))
+            ),
+            @@ User input index checks out OK - simply return it
+            prmSheetSection,
+            @@ User input doesn't check out - invalid user input
+            0
+        ),
+        @@ %0 is a string/section name - test match it against defined section names
+        @@ use match() to allow wildcarding
+        match
+        (
+            @@ retrieve sheetSections and cut it to lowercase to ensure case-insensitivity
+            lcstr(v(var-sheetSections)),
+            @@ cut userinput to lowercase to ensure case-insensitivity
+            [lcstr
+            (
+                @@ cut spaces to underscores in userinput since that's how they're stored in object attributes
+                edit(prmSheetSection,%b,_)
+            @@ the * following lcstr is a wildcard pattern for the match() function
+            )]*,
+            @@ the pipe delimiter tells match() that our sheetSections value is pipe-delimited
+            |
+        )
+    )]
+
+@@@@
+@@@@ Retrieves the full and capitalized proper name of a sheet section.  User input may either be an index number or a partial/abbreviated case-insensitive section name.
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getSectionName, sheetSection)
+@@@@
+@@@@ Returns the full and capitalized proper name of the sheet section specified, or returns 0 if the input index is outside the bounds of the section array or if the 
+@@@@ partial section name does not match any defined section name.
+@@@@
+@@
+@@ CDIR params( prmSheetSection )
+@@
+&fn-getSectionName cvDCORef=
+    [if
+    (
+        @@ this ensures that we are in fact dealing with a valid sheet section
+        t(u(fn-getSectionIndex,prmSheetSection)),
+        @@ the section name or index number is valid - it doesn't matter which because the getSectionIndex function mutates it automatically into the form we need right here
+        @@ the final callout, before return, is to capitalize the name retrieved from the sheetSections array
+        u
+        (
+            fn-capWords,
+            @@ cut underscores out before calling capWords
+            edit
+            (
+                @@ this elements call retrieves sheetSections, calls getSectionIndex using %0 as the argument, and specifies the pipe delimiter since that's how we store our section names
+                @@ the callout to getSectionIndex converts %0 into a valid numeric array index regardless of whether the input is a number or a string
+                elements(v(var-sheetSections),u(fn-getSectionIndex,prmSheetSection),|),
+                _,
+                %b
+            ),
+            @@ specify %b as input delim for capwords
+            %b,
+            @@ specify %b as output delim for capwords
+            %b
+        ),
+        @@ getSectionIndex was false (0) which means the input value was invalid as a section specification
+        0
+    )]
+
+@@@@
+@@@@ Adds a sheet section to the chargen database.
+@@@@
+@@@@    USAGE:
+@@@@      u( fn-addSection, sectionName )
+@@@@
+@@@@ Returns 1 if the section was added successfully, with no errors.  Returns 0 if some error was encountered, which would indicate that restricted characters were entered by the user 
+@@@@ in section name.
+@@@@
+@@
+@@ CDIR params( sectionName )
+@@
+&fn-addSection cvDCORef=
+    [if
+    (
+        u(fn-isGoodStatString,sectionName),
+        @@ name validation passed
+        [set
+        (
+            %!,
+            var-sheetSections:
+            @@ setunion will automagically sort and remove any duplicates, negating any need to waste processing by pre-testing to see if users are adding the same section name over and over
+            [setunion
+            (
+                v(var-sheetSections),
+                u
+                (
+                    fn-capWords,
+                    @@ cut any spaces to underscores in the user input sectionName before calling capWords - that way we know for sure what delimiter to use when we call capWords
+                    edit(sectionName,%b,_),
+                    @@ input delim is underscore
+                    _,
+                    @@ output delim is underscore
+                    _
+                ),
+                @@ setunion delimiter is pipe (for var-sheetSections)
+                |
+            )]
+        )]
+        [set
+        (
+            %!,
+            var-sheetStats:
+            [insert
+            (
+                v(var-sheetStats),
+                @@ the insert-index is the new section index
+                u(fn-getSectionIndex,sectionName),
+                @@ leave the insert-value blank
+                ,
+                @@ the insert-delimiter is a pipe
+                |
+            )]
+        )]
+        @@ finally, return 1
+        1,
+        @@ failed on one namevalidation
+        0
+    )]
+
+@@@@
+@@@@ Adds a section with the specified name to the list of chargen sections.  We don't need to do any testing to see if the section already exists, because the use of setunion() in the addSection 
+@@@@ function neatly overwrites any existing definition.    Section name must be the name of the section you wish to add, but you don't need to apply capitalization.  Don't put in underscores, use 
+@@@@ spaces.  Section names are prohibited from using characters listed in the var-restrictStatStringChars attribute.
+@@@@
+@@
+@@ CDIR params ( sectionName )
+@@
+&cmd-addCGSection cvDCORef=$+addCGSection *:
+    @pemit %#=
+        [if
+        (
+            @@ the addSection function does name validation for us
+            u(fn-addSection,sectionName),
+            @@ if addSection returned a true value, return a success message retrieving the properly formatted section name
+            [u(fn-hdrSuccess,+addCGSection)] Added section '[u(fn-getSectionName,sectionName)]',
+            [u(fn-hdrError,+addCGSection)] Could not add section '[sectionName]' - invalid characters in section name string.%b%b[u(fn-getRestrictedCharMsg)]
+        )];
+
+@@@@
+@@@@ Deletes a sheet section from the chargen database.
+@@@@
+@@@@    USAGE:
+@@@@      u( fn-delSection, sectionName )
+@@@@
+@@@@ Returns 1 if the section was deleted successfully, with no errors.  Returns 0 if some error was encountered, which would indicate that the specified section name did not exist when 
+@@@@ the function was called
+@@@@
+@@
+@@ CDIR params( prmSheetSection )
+@@
+&fn-delSection cvDCORef=
+    [if
+    (
+        u(fn-getSectionIndex,prmSheetSection),
+        @@ remove the section from stats FIRST
+        [set
+        (
+            %!,
+            var-sheetStats:
+            [ldelete
+            (
+                v(var-sheetStats),
+                u(fn-getSectionIndex,prmSheetSection),
+                @@ input delimiter is the pipe
+                |,
+                @@ output delimiter must also be the pipe
+                |
+            )]
+        )]
+        @@ getSectionIndex validated section existence
+        [set
+        (
+            %!,
+            var-sheetSections:
+            [ldelete
+            (
+                v(var-sheetSections),
+                u(fn-getSectionIndex,prmSheetSection),
+                @@ input delimiter is the pipe
+                |,
+                @@ output delimiter must also be the pipe
+                |
+            )]
+        )]
+        @@ finally, return 1
+        1,
+        @@ getSectionIndex returned 0
+        0
+    )]
+
+@@@@
+@@@@ Deletes a section with the specified name or index number from the list of chargen sections.  We don't need to do any testing to see if the section already exists, because the use of 
+@@@@ ldelete() with getSectionIndex() in the delSection function neatly performs these checks for us.
+@@@@
+@@
+@@ CDIR params ( sectionId )
+@@
+&cmd-delCGSection cvDCORef=$+delCGSection *:
+    @pemit %#=
+        @@ we want to grab the section name before we attempt to delete it - we'll only use this value if deletion is successful, the value will be 0 otherwise
+        [setq(0,u(fn-getSectionName,sectionId))]
+        [if
+        (
+            @@ the delSection function does id validation for us
+            u(fn-delSection,sectionId),
+            @@ if delSection returned a true value, return a success message retrieving the properly formatted section name
+            [u(fn-hdrSuccess,+delCGSection)] Deleted section '[%q0]',
+            [u(fn-hdrError,+delCGSection)] Could not delete section '[sectionId]' - section not found.
+        )];
+
+@@@@
+@@@@ A variable container attribute containing defined Sheet Stats.  This is effectively a multi-dimensional array where the first dimension is pipe-delimited and represents stats divided into the 
+@@@@ Sheet Sections they belong to, and within each Section a second dimension is colon-delimited representing the collection of stats that belongs to that Section.
+@@@@
+&var-sheetStats cvDCORef=|Full_Name:Apparent_Age:Date_Of_Birth||
+
+@@@@
+@@@@ Retrieves the stats collection relating to the specified sheet section.  User input may either be an index number or a partial/abbreviated case-insensitive section name.
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getSectionStats, sheetSection)
+@@@@
+@@@@ Returns the full collection of colon-delimited stats belonging to the specified sheetSection, or returns 0 if the input index is outside the bounds of the section array or if the 
+@@@@ partial section name does not match any defined section name.
+@@@@
+@@
+@@ CDIR params ( prmSheetSection )
+@@
+&fn-getSectionStats cvDCORef=
+    [if
+    (
+        @@ this ensures that we are in fact dealing with a valid sheet section
+        t(u(fn-getSectionIndex,prmSheetSection)),
+        @@ this elements call retrieves sheetStats, calls getSectionIndex using %0 as the argument, and specifies the pipe delimiter since that's how we store our section names
+        @@ the callout to getSectionIndex converts %0 into a valid numeric array index regardless of whether the input is a number or a string
+        elements(v(var-sheetStats),u(fn-getSectionIndex,prmSheetSection),|),
+        @@ getSectionIndex was false (0) which means the input value was invalid as a section specification
+        0
+    )]
+
+@@@@
+@@@@ Retrieves the array index of a sheet stat, within a specified sheet section, by its partial/abbreviated name, and is not case sensitive
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getStatIndex, sectionName, statName)
+@@@@
+@@@@ Returns the array index into the specified section if sectionName and statName are valid, and statName is in sectionName
+@@@@ Returns 0 if sectionName is valid and statName is not
+@@@@ Returns -1 if sectionName is not valid
+@@@@
+@@ CDIR params( prmSheetSection, prmSheetStat )
+@@ CDIR bVar bSectionStats = u(fn-getSectionStats,prmSheetSection)
+&fn-getStatIndex cvDCORef=
+    [if
+    (
+        t(u(fn-getSectionIndex,prmSheetSection)),
+        if
+        (
+            isnum(prmSheetStat),
+            @@ %1 is an index number, not a string/section name
+            if
+            (
+                @@ cand tests each of its internal operators in turn, exiting with a false return when any evaluate to false
+                cand
+                (
+                    @@ test to ensure that the numeric input is gtr 0
+                    gt(prmSheetStat,0),
+                    @@ test to ensure that the numeric input is lte the actual number of defined sheetSections
+                    lte(prmSheetStat,words(bSectionStats,:)),
+                    @@ and double-check that the number of sections in sheetStats agrees
+                    lte(prmSheetStat,words(bSectionStats,:))
+                ),
+                @@ User input index checks out OK - simply return it
+                prmSheetStat,
+                @@ User input doesn't check out - invalid user input
+                0
+            ),
+            @@ %1 is a string/stat name - test match it against defined stat names
+            @@ use match() to allow wildcarding
+            match
+            (
+                @@ retrieve sheetStats and cut it to lowercase to ensure case-insensitivity
+                lcstr(bSectionStats),
+                @@ cut userinput to lowercase to ensure case-insensitivity
+                [lcstr
+                (
+                    @@ cut spaces to underscores in userinput since that's how they're stored in object attributes
+                    edit(prmSheetStat,%b,_)
+                @@ the * following lcstr is a wildcard pattern for the match() function
+                )]*,
+                @@ the colon delimiter tells match() that our sheetStats value is pipe-delimited
+                :
+            )
+        ),
+        @@ getSectionIndex is false - return -1
+        -1
+    )]
+
+@@@@
+@@@@ Retrieves the full and capitalized proper name of a sheet stat from the specified Sheet Section.  Sheet Section may be either an index number or a partial/abbreviated case-insensitive 
+@@@@ section name.  Stat may either be an index number or a partial/abbreviated case-insensitive stat name.
+@@@@
+@@@@  USAGE:
+@@@@    u(fn-getStatName, sheetSection, sheetStat)
+@@@@
+@@@@ Returns the full and capitalized proper name of the sheet stat specified if sectionName and statName are valid, and statName is in sectionName
+@@@@ Returns 0 if sectionName is valid and statName is not
+@@@@ Returns -1 if sectionName is not valid
+@@@@
+@@ CDIR params ( prmSheetSection, prmSheetStat )
+&fn-getStatName cvDCORef=
+    [if
+    (
+        @@ this ensures that we are in fact dealing with a valid sheet section
+        t(u(fn-getStatIndex,prmSheetSection,prmSheetStat)),
+        @@ the section name or index number is valid - it doesn't matter which because the getSectionIndex function mutates it automatically into the form we need right here
+        @@ the final callout, before return, is to capitalize the name retrieved from the sheetStats array
+        u
+        (
+            fn-capWords,
+            @@ cut underscores out before calling capWords
+            edit
+            (
+                @@ this elements call retrieves sectionStats, calls getSectionIndex using %0 as the argument, and specifies the pipe delimiter since that's how we store our section names
+                @@ the callout to getSectionIndex converts %0 into a valid numeric array index regardless of whether the input is a number or a string
+                elements(u(fn-getSectionStats,prmSheetSection),u(fn-getStatIndex,prmSheetSection,prmSheetStat),:)
+                ,
+                _,
+                %b
+            ),
+            @@ specify %b as input delim for capwords
+            %b,
+            @@ specify %b as output delim for capwords
+            %b
+        ),
+        @@ getStatIndex was false - we don't know if it was 0 or -1 - so pipe its output through to our output
+        u(fn-getStatIndex,prmSheetSection,prmSheetStat)
+    )]
+
+@@@@
+@@@@ Adds a stat with the specified name under the specified Sheet Section.  Sheet Section may be either an index number or a partial/abbreviated case-insensitive section name.
+@@@@
+@@@@  USAGE:
+@@@@    u( fn-addStat, sheetSection, statName )
+@@@@
+@@@@ Returns 1 if the stat was added successfully.
+@@@@ Returns 0 if the supplied stat name contained invalid characters
+@@@@ Returns -1 if the specified section could not be found.
+@@@@
+@@
+@@ CDIR params ( prmSheetSection, prmStatName )
+@@
+&fn-addStat cvDCORef=
+    [switch
+    (
+        @@ the 1 at the top of the switch statement allows trapping the first of the evals that returns true.
+        @@ another way to use switch() is to put an eval here and let the other evals match its output
+        1,
+        @@ first validate the supplied statName
+        not(u(fn-isGoodStatString,prmStatName)),
+        @@ Invalid stat name 0 and done
+        0,
+        @@ next validate the section name
+        not(u(fn-getSectionIndex,prmSheetSection)),
+        @@ invalid section name -1 and done
+        -1,
+        @@ Everything checks out OK
+        @@ the section name or index number is valid - it doesn't matter which because the getSectionIndex function mutates it automatically into the form we need right here
+        [set
+        (
+            %!,
+            var-sheetStats:
+            [replace
+            (
+                v(var-sheetStats),
+                @@ the replacement index is the sheetSection index discovered earlier
+                u(fn-getSectionIndex,prmSheetSection),
+                @@ the replacement value is the stats collection extracted from that section, with the new stat inserted in
+                @@ setunion() means that we don't have to dick around with isStat or any other form of testing to see if the stat being added
+                @@ already exists - if it does, fine.  if not, fine.  setunion() automagically removes duplicates while merging old and new
+                setunion
+                (
+                    @@ get the specific stats for the indicated section
+                    elements(v(var-sheetStats),u(fn-getSectionIndex,prmSheetSection),|),
+                    edit(capWords(prmStatName,%b,%b),%b,_),
+                    @@ stats in sections are colon-delimited
+                    :
+                ),
+                @@ stat sections for replacement are pipe-delimited
+                |
+            )]
+        )]
+        @@ Stat added successfully
+        1
+    )]
+
+@@@@
+@@@@ Adds a stat with the specified name to the list of stats in the specified chargen section.  Sheet Section may be either an index number or a partial/abbreviated 
+@@@@ case-insensitive section name.  Stat name must be the name of the stat you wish to add, but you don't need to apply capitalization.  Don't put in underscores, use 
+@@@@ spaces.  Stat names are prohibited from using characters listed in the var-restrictStatStringChars attribute.
+@@@@
+@@@@  USAGE:
+@@@@    +addCGStat sheetSection=statName
+@@
+@@ CDIR params ( sheetSection, statName )
+@@
+&cmd-addCGStat cvDCORef=$+addCGStat *=*:
+    @pemit %#=
+        [switch
+        (
+            @@ this time we use switch the other way around, testing its output for specific values
+            u(fn-addStat,sheetSection,statName),
+            @@ 1 is perfect success
+            1,
+            [u(fn-hdrSuccess,+addCGStat)] Added stat '[u(fn-getStatName,sheetSection,statName)]' to section '[u(fn-getSectionName,sheetSection)]',
+            @@ 0 is bad stat name
+            0,
+            [u(fn-hdrError,+addCGStat)] Could not add stat '[statName]' - invalid characters in stat name string.%b%b[u(fn-getRestrictedCharMsg)],
+            @@ -1 is bad section name
+            -1,
+            [u(fn-hdrError,+addCGStat)] Could not add stat '[statName]' to section '[sheetSection]' - section not found.,
+            @@ Finally the default, for unhandled error conditions
+            [u(fn-hdrError,+addCGStat)] Unhandled or unknown error encountered.  Contact code staff,
+        )]
+
+@@@@
+@@@@ Deletes the specified stat from the specified Sheet Section.  Sheet Section may be either an index number or a partial/abbreviated case-insensitive section name.  Stat may be either an 
+@@@@ index number or a partial/abbreviated case-insensitive stat name.
+@@@@
+@@@@  USAGE:
+@@@@    u( fn-delStat, sheetSection, sheetStat )
+@@@@
+@@@@ Returns 1 if the stat was deleted successfully.
+@@@@ Returns 0 if the specified stat could not be found.
+@@@@ Returns -1 if the specified section could not be found.
+@@@@
+@@
+@@ CDIR params ( prmSheetSection, prmSheetStat )
+@@
+&fn-delStat cvDCORef=
+    [switch
+    (
+        1,
+        @@ if not getSectionIndex, return -1 and done
+        not(u(fn-getSectionIndex,prmSheetSection)),
+        @@ invalid section index
+        -1,
+        @@ we passed section index, so test stat index
+        not(u(fn-getStatIndex,prmSheetSection,prmSheetStat)),
+        @@ if not getStatIndex, 0 and done
+        0,
+        @@ finally, let our default case be our meat and potatos
+        [set
+        (
+            %!,
+            var-sheetStats:
+            @@ the outer replacement is replacing the edited stat Section in sheetStats
+            [replace
+            (
+                @@ list is the original sheetStats value
+                v(var-sheetStats),
+                @@ position in this replacement is Section Index
+                u(fn-getSectionIndex,prmSheetSection),
+                @@ new item is the edited stats list
+                ldelete
+                (
+                    @@ delete only from this section's stats
+                    u(fn-getSectionStats,prmSheetSection),
+                    @@ delete index is stat index
+                    u(fn-getStatIndex,prmSheetSection,prmSheetStat),
+                    @@ input delimiter is colon
+                    :,
+                    @@ output delimiter is also colon
+                    :
+                ),
+                @@ input delimiter is pipe
+                |,
+                @@ output delimiter is also pipe
+                |
+            )]
+        )]
+        @@ after performing the delete/replace/set, return 1
+        1
+    )]
+
+@@@@
+@@@@ Deletes a stat with the specified name from the list of stats in the specified chargen section.  Sheet Section may be either an index number or a partial/abbreviated 
+@@@@ case-insensitive section name.  Stat may be either an index number or a partial/abbreviated case-insensitive stat name.
+@@@@
+@@@@  USAGE:
+@@@@    +delCGStat sheetSection=sheetStat
+@@@@
+@@
+@@ CDIR params ( sheetSection, sheetStat )
+@@
+&cmd-delCGStat cvDCORef=$+delCGStat *=*:
+    @pemit %#=
+        @@ On deletion, we need to get the stat's name in a q-reg BEFORE deleting it - if the stat didn't properly exist, this value will be 0
+        @@ That isn't a big deal (we don't need to do error checking) since we'll only be using it on success
+        [setq(0,u(fn-getStatName,sheetSection,sheetStat))]
+        [switch
+        (
+            u(fn-delStat,sheetSection,sheetStat),
+            @@ 1 is perfect success
+            1,
+            [u(fn-hdrSuccess,+delCGStat)] Deleted stat '[%q0]' from section '[u(fn-getSectionName,sheetSection)]',
+            @@ 0 is bad stat name
+            0,
+            [u(fn-hdrError,+delCGStat)] Could not delete stat '[sheetStat]' - stat not found.,
+            @@ -1 is bad section name
+            -1,
+            [u(fn-hdrError,+delCGStat)] Could not delete stat '[sheetStat]' from section '[sheetSection]' - section not found.,
+            @@ Finally the default, for unhandled error conditions
+            [u(fn-hdrError,+delCGStat)] Unhandled or unknown error encountered.  Contact code staff,
+        )]
+
+@@@@
+@@@@ Lists CG Sections and their Subordinate Stats that have been defined.
+@@@@
+&cmd-listCGStats cvDCORef=$+listCGStats:
+    @pemit %#=
+        [iter
+        (
+            v(var-sheetSections),
+            @@ display each sheet section index and section name in user's natural highlight color
+            [ansi(h,\[#@\]%b%b[u(fn-getSectionName,#@)])]
+            @@ force in a line break and some spacing to indicate ownership
+            %r%b%b%b%b
+            @@ next we itemize the effects of iterating over each stat in this section's collection, returning the stat's index in the section
+            @@ as well as it's proper name
+            [itemize
+            (
+                iter
+                (
+                    @@ the list this time is the stat collection from this section
+                    @@ the list position in the outermost iter() is going to be the same as the array index into var-sheetSections
+                    @@ so there's no need to waste processing by calling getSectionIndex
+                    @@ at least under PennMUSH 1.8.6, #@ is still a reference to the outermost iter() until we reach the second parameter of
+                    @@ the nested iter()
+                    u(fn-getSectionStats,#@),
+                    @@ escaping the square brackets on the outside makes them appear as text
+                    @@ unescaped brackets on the inside forces a function evaluation with unevaluated text around it (MUSH can get confused sometimes)
+                    @@ calling inum and itext with the parameter 0 refers to the innermost nested iter at this point (at least under Penn's 
+                    @@ implementation of inum/itext)
+                    \[[inum(0)]\]
+                    @@ force a space in there - this isn't just for the compiler's benefit but also for MUSH which can get confused sometimes, especially 
+                    @@ with all this eval/non-eval gobbledygook going on
+                    %b
+                    @@ calling capwords with these paramters capitalizes each word (in case for some reason the words aren't capitalized) and at the same
+                    @@ time cuts underscores to spaces
+                    [u(fn-capWords,itext(0),_,%b)],
+                    @@ the input delimiter on the nested iter is colon
+                    :,
+                    @@ the output delimiter on this nested iter should also be a colon - let itemize work that out
+                    :
+                ),
+                @@ back out into itemize land, the input delimiter is a colon (because the output delimiter from iter was a colon)
+                @@ this is absolutely necessary because we had spaces in our words
+                :,
+                @@ we want the 'and' conjunction
+                and,
+                @@ finally, use the comma punctuation and escape that little sucker so MUSH doesn't think it's another argument/parameter to the itemize
+                @@ function
+                \,
+            )],
+            @@ input delimiter for sheetSections is the pipe
+            |,
+            @@ output delimiter for sheet section processing is a double-linebreak
+            %r%r
+        )]
+
+@@@@
+@@@@ So after I got done with this demo project, I found some bugs that amount to flaws in my logic right from the start.  A big one is that when you add CG Sections, if the Section already exists, 
+@@@@ setunion() does indeed automagically prevent creating a new section --in var-sheetSections-- but a new space for that section's stats (which already exists) is still created in var-sheetStats.
+@@@@
+@@@@ This is a bug in the MUSH Code, not in the MUSH Compiler, and the purpose of the softcode project is to demo the compiler, which works fine!
+@@@@
+@@@@ Also, in case you didn't read the full commentary above, this is NOT a full chargen project.  It's a small demo representing the basic foundation of a chargen stats DB with section and stats 
+@@@@ storage.  That's it.  The purpose of it is to demo a relatively common softcode system with intertwining functions, which can be really simple if the source can be kept in a manageable 
+@@@@ state but which really quickly becomes a godawful headache even for an experienced coder without some basic support features such as are provided by this "compiler" product.
+@@@@
+@@@@ Apart from that:
+@@@@
+@@@@ +addcgsection <section name>
+@@@@   * Section Name will have each word automatically capitalized if you input it with spaces between words.
+@@@@ +delcgsection <section index number> or <section name>
+@@@@   * Section Name may be a partial name and need not be case sensitive.
+@@@@
+@@@@ +addcgstat <section index number> or <section name>=<stat name>
+@@@@   * Section Name may be a partial name and need not be case sensitive.
+@@@@   * Stat Name will have each word automatically capitalized if you input it with spaces between words.
+@@@@ +delcgstat <section index number> or <section name>=<stat index number> or <stat name>
+@@@@   * Section Name may be a partial name and need not be case sensitive.
+@@@@   * Stat Name may be a partial name and need not be case sensitive.
+@@@@
+@@@@ +listcgstats
+@@@@   * Lists defined section names and index numbers, and the stats and index numbers within those sections.
+@@@@
+@@@@ This softcode is designed for and tested with PennMUSH 1.8.6 p1rc1.  Samples for additional platforms may be provided in the future, time and/or motivation permitting.
+@@@@

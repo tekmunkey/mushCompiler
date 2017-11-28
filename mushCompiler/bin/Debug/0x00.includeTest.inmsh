@@ -1,0 +1,99 @@
+@@
+@@ This comment won't appear in the output because it only uses @@ - it is a compiler-level comment.
+@@
+@@ Why does this file have the .inmsh extension instead of the .msh extension?  Because compile.bat is set up to compile ALL .msh extensions and this is specifically intended 
+@@ as an include, not as a direct-compile file.
+@@
+
+@@@@
+@@@@ These are passthrough comments which will appear in the output file.
+@@@@    * 0x00.incTest.msh is a demonstration of the INCLUDE compiler directive.  The file will be included as if it were a header in 0x01.coreGlobalsObject.msh at compile time.
+@@@@
+
+
+
+
+
+
+
+
+
+
+@@
+@@ extra linebreaks in the original file, which are nice for readability, are always neatly removed in compilation runs to make for quick, clean uploads through a MU client
+@@
+
+
+
+
+
+
+
+@@@@
+@@@@ Demonstrating includes feature.
+@@@@
+
+
+
+
+
+@@@@
+@@@@ I'm a lousy poet
+@@@@
+th 
+    [set
+    (
+        %!,
+        myTestAttribute:
+        [add
+        (
+            @@ Not particularly complex function choices
+            1,
+            @@ But demonstrating exploded code concatenation features nonetheless
+            2
+        )]%b
+        Oh\, to be a tree.%b%bA-blowin' in the bree.%b
+        [add(2,4)]%b
+        Just a'droppin' my sticks\, never carryin' nobody's bricks.%b
+        @@ OK, ok, I never said I was a poet.
+        @@ I'm also demonstrating the usefulness of being able to actually comment your own MUSH code in a persistent storage format.
+    )]
+@@ The line immediately below this one contains nothing but a CRLF - the compiler will remove this comment and treat it as END OF BLOCK
+
+@@ The line immediately above this one contains nothing but a CRLF - the compiler will remove this comment and treat the next line as BEGINNING OF BLOCK
+
+@@@@
+@@@@ Now that we've set an attribute upon ourself, we'd better do something with it!
+@@@@
+th [u(myTestAttribute)]
+
+
+
+@@@@
+@@@@ I've never been very good at selling myself.
+@@@@
+th 
+    [ansi
+    (
+        hg,
+        H
+        o
+        p
+        e
+        full
+        y yo
+        u hav
+        @@ This demonstration doesn't serve much purpose but to demonstrate total concatenation, so as to allay any fears MUSH coders may have about using this product.
+        e co
+        lor on and bri
+        @@ Line terminations are removed and leading and trailing whitespace are eliminated, while whitespace between words on the individual lines is preserved.
+        ght gre
+        en isn't to
+        @@ In this fashion you can still present formatted text (even run it through the compiler) with no worries - just be careful not to put the whitespace you want to keep at the beginning or end of a line!
+        o obno
+        xious!
+    )]
+
+@@@@
+@@@@ This is the end of 0x00.incTest.msh
+@@@@
