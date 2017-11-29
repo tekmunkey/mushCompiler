@@ -2,11 +2,25 @@
 
 SETLOCAL 
 rem
-rem Set the paths to the mushCompiler.exe file and the output directory
+rem Set the path to the mushCompiler.exe - this must be a path to the exe itself
 rem
 SET compilerPath=".\mushCompiler.exe"
+rem 
+rem Set the path to the output directory - this must be a path to a DIRECTORY and not to a file 
+rem 
+rem Don't put a drive letter in this variable that isn't the same drive that the batch file lives on
+rem
+rem Don't put a trailing backslash on this variable name - it's added as needed in later codelines
+rem
+rem Don't put quotation marks in this variable even if the pathname contains spaces - we need to concat 
+rem a filename later on and we add quotation marks as needed in later codelines
+rem
 SET outputPath=.\Compiles
 
+rem
+rem Create the output path directory if it doesn't exist 
+rem
+IF NOT EXIST "%outputPath%\" mkdir "%outputPath%\"
 
 rem
 rem 'compiling' exploded MUSH code is done by processing Compiler Directives and unless instructed otherwise, simply 
