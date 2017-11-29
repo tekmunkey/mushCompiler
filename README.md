@@ -18,7 +18,7 @@ I'm also starting off on a new MUSH Code project that I'm going to be posting on
 
 This project is C# DotNET and the .sln and .vcproj files are Console Application files from Visual Studio (VS) 2008 Professional.  It targets DotNET Framework 2.0 and uses references to System, System.IO, System.Text.RegularExpressions.  It should compile and run under the Mono Framework for Linux, but hasn't been tested there.  It has compiled and run just fine under every version of Windows from XP to Windows 7.  It should compile and run under Windows 2000 (if you deliberately install DotNET Framework 2.0), 8, and 10 (without any special steps), but hasn't been tested.
 
-###### If you want to use this code with any Express version of VS 2008 or any earlier version, just create a new Console Application project and copy mushCompiler/Program.cs and mushCompiler/mushCompilerClass.cs into the directory where that project's Program.cs file resides and let it overwrite.  Then compile your own copy.  Or grab mushCompiler.exe from the mushCompiler/bin/Debug directory and study the comments in compile.bat script and provided sample files in that directory for usage documentation.
+**If you want to use this code with any Express version of VS 2008 or any earlier version, just create a new Console Application project and copy mushCompiler/Program.cs and mushCompiler/mushCompilerClass.cs into the directory where that project's Program.cs file resides and let it overwrite.  Then compile your own copy.  Or grab mushCompiler.exe from the mushCompiler/bin/Debug directory and study the comments in compile.bat script and provided sample files in that directory for usage documentation.**
 
 If you open this .sln or .vcproj with any newer version of VS (2012 and up) then it should have no problem converting the solution and project into the newer format.  If it does, then just refer to the previous line and treat it like an earlier version.
 
@@ -29,15 +29,17 @@ The 'debug' configuration for the .vcproj file is basically the same as the comp
 ###### You'll find:  mushCompiler.exe
 
 Usage:
-######    mushCompiler.exe /code -infile=sourcePath -outfile=destPath
+      mushCompiler.exe /code -infile=sourcePath -outfile=destPath
 
-######    mushCompiler.exe /ascii -infile=sourcePath -outfile=destPath
+      mushCompiler.exe /ascii -infile=sourcePath -outfile=destPath
 
       ie:  mushCompiler.exe /code -infile="c:\my code directory\some sub directory\my input file.msh" -outfile="c:\my code directory\some sub directory\Compiles\my ouput file.mush"
 
+      ie:  mushCompiler.exe /ascii -infile="c:\my art directory\my input file.ascii" -outfile="c:\my art directory\my output file.ascsh"
+
 **Note the quotation marks around the paths.  These are absolutely necessary in windows commandline paths if and only if there are spaces in path names.**
 
-      ie:  mushCompiler.exe /ascii -infile="c:\my art directory\my input file.txt" -outfile="c:\my art directory\my output file.txt"
+You are by no means *required* to use .msh for input softcode and .mush for output softcode extensions, or .ascii for input ascii art and .ascsh for output ascii art extensions.  These are just what makes sense in my head.  You may by all means go ahead and use any file extension you like.  However, if you use the compile.bat file included with this project (more on that below) those file extensions are written into that file, so if you choose to use alternate file extensions you will also want to change them in that batch file.
 
 ###### You'll find: 0x00.includeTest.inmsh
 
