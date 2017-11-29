@@ -35,37 +35,37 @@ Usage:
 
       ie:  mushCompiler.exe /code -infile="c:\my code directory\some sub directory\my input file.msh" -outfile="c:\my code directory\some sub directory\Compiles\my ouput file.mush"
 
-      **Note the quotation marks around the paths.  These are absolutely necessary in windows commandline paths if and only if there are spaces in path names.**
+**Note the quotation marks around the paths.  These are absolutely necessary in windows commandline paths if and only if there are spaces in path names.**
 
       ie:  mushCompiler.exe /ascii -infile="c:\my art directory\my input file.txt" -outfile="c:\my art directory\my output file.txt"
 
-You'll find: 0x00.includeTest.inmsh
+###### You'll find: 0x00.includeTest.inmsh
 
       This is a MUSH softcode file that demonstrates the compiler's pre-processor "include" directive (it contains softcode and it's the file that gets included in another code file).  This file doesn't get compiled directly when you run the compile.bat file.
 
-You'll find: 0x01.compileTest.msh
+###### You'll find: 0x01.compileTest.msh
 
       This is a MUSH softcode file that actually includes the includeTest file and contains additional softcode.  This is the MUSH Softcode that actually gets compiled when you run the compile.bat file.
 
-You'll find:  ASCIIWorkingFile.ascii
+###### You'll find:  ASCIIWorkingFile.ascii
 
       This is a plain ASCII text file (UTF-8 without a byte order marker) containing 3 pieces of ASCII Art.  2 of them are bubble-font characters (the number 1 and the letter A) and 1 of them is a thunder cloud with a lightning bolt.  This is an ASCII Art file that gets compiled when you run the compile.bat file.
 
-You'll find: cmd.bat
+###### You'll find: cmd.bat
 
-      This Windows Batch file should be compatible with any version of Windows back to XP and possibly 2000, but has only been tested as far back as Windows 7.  Compatibility is determined by documentation.  All it does is (if you double-click on it) open a command prompt and ensure that the command prompt is focused on the directory where the batch file was double-clicked, even if you right-click and select Run As Administrator (which without some trickery included in the batch file would otherwise focus on %WINDIR%\System32)
+This Windows Batch file should be compatible with any version of Windows back to XP and possibly 2000, but has only been tested as far back as Windows 7.  Compatibility is determined by documentation.  All it does is (if you double-click on it) open a command prompt and ensure that the command prompt is focused on the directory where the batch file was double-clicked, even if you right-click and select Run As Administrator (which without some trickery included in the batch file would otherwise focus on %WINDIR%\System32)
 
-      This batch file is handy if, for example, you like keeping a command prompt open while using the compile.bat so you can keep an eye on output (you would just click on the command prompt window, hit the UP ARROW on the keyboard, hit ENTER, watch).
+This batch file is handy if, for example, you like keeping a command prompt open while using the compile.bat so you can keep an eye on output (you would just click on the command prompt window, hit the UP ARROW on the keyboard, hit ENTER, watch).
 
-You'll find: compile.bat
+###### You'll find: compile.bat
 
-      This script assumes that it resides in a directory with mushCompiler.exe and a subdirectory named Compiles, one or more softcode files with the extension .msh, and one or more ascii art files with the extension .ascii
+This script assumes that it resides in a directory with mushCompiler.exe and a subdirectory named Compiles, one or more softcode files with the extension .msh, and one or more ascii art files with the extension .ascii
 
-      For each .msh file it finds, it automagically calls mushCompiler.exe /code with the .msh file as the input and .\Compiles\samename-COMPILED.mush as the output
+For each .msh file it finds, it automagically calls mushCompiler.exe /code with the .msh file as the input and .\Compiles\samename-COMPILED.mush as the output
 
-      For each .ascii file it finds, it automagically calls mushCompiler.exe /ascii with the .ascii file as the input and .\Compiles\samename-COMPILED.ascsh as the output
+For each .ascii file it finds, it automagically calls mushCompiler.exe /ascii with the .ascii file as the input and .\Compiles\samename-COMPILED.ascsh as the output
 
-      If there are no .msh or .ascii files then it simply doesn't do anything with that particular extension.  If there is one but not the other, then it does something with what it does find.
+If there are no .msh or .ascii files then it simply doesn't do anything with that particular extension.  If there is one but not the other, then it does something with what it does find.
 
 ### So you can copy mushCompiler.exe and the compile.bat file into any/every directory where you store your softcode files, or you can copy mushCompiler.exe into some static location and edit the value of the SET compilerPath=".\mushCompiler.exe" variable in the batch file, and replace the . with the static path to the directory where mushCompiler.exe lives, then just copy the batch file into any/every directory where softcode or ASCII art resides (this last method is my strong recommendation).
 
