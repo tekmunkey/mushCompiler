@@ -32,9 +32,9 @@ Usage:
 
       mushCompiler.exe /code -infile=sourcePath -outfile=destPath
 
-      mushCompiler.exe /ascii -infile=sourcePath -outfile=destPath
-
       ie:  mushCompiler.exe /code -infile="c:\my code directory\some sub directory\my input file.msh" -outfile="c:\my code directory\some sub directory\Compiles\my ouput file.mush"
+
+      mushCompiler.exe /ascii -infile=sourcePath -outfile=destPath
 
       ie:  mushCompiler.exe /ascii -infile="c:\my art directory\my input file.ascii" -outfile="c:\my art directory\my output file.ascsh"
 
