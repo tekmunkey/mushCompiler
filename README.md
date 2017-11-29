@@ -37,7 +37,7 @@ Usage:
 
       ie:  mushCompiler.exe /ascii -infile="c:\my art directory\my input file.ascii" -outfile="c:\my art directory\my output file.ascsh"
 
-**Note the quotation marks around the paths.  These are absolutely necessary in windows commandline paths if and only if there are spaces in path names.**
+**Note the quotation marks around the paths.  These are absolutely necessary in Windows commandline paths if and only if there are spaces in path names.**
 
 You are by no means *required* to use .msh for input softcode and .mush for output softcode extensions, or .ascii for input ascii art and .ascsh for output ascii art extensions.  These are just what makes sense in my head.  You may by all means go ahead and use any file extension you like.  However, if you use the compile.bat file included with this project (more on that below) those file extensions are written into that file, so if you choose to use alternate file extensions you will also want to change them in that batch file.
 
