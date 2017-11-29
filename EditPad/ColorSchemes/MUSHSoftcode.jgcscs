@@ -1,0 +1,89 @@
+JGCSCS
+4
+MUSH Softcode Syntax Coloring
+*.msh;*.mush;*.inmsh
+tekmunkey
+gitid@tekmunkey.com
+
+
+TRUE
+@@
+
+1
+Comments
+3
+Please enter some text here that
+can be displayed as an example in
+the preferences when configuring colors.
+0
+TRUE
+5
+Compiler Directive
+
+^\u0020*@@\u0020+CDIR\u0020+(.*)$
+FALSE
+FALSE
+11
+0
+
+
+0
+FALSE
+Documentation Comment
+
+^\u0020*@@\u0020*(@@|CMT|CMTS|COMMENT|COMMENTS)\u0020*(\S+.*)?$
+TRUE
+FALSE
+6
+0
+
+
+0
+FALSE
+Comment
+
+^\u0020*@@.*?$
+FALSE
+FALSE
+5
+0
+
+
+0
+FALSE
+% Substitutions
+
+\%([a-c]|[k-l]|[n-p]|[r-u]|[v-x][a-z]|\#|\~|\:|\%|\@|\!|\?|\=|\+|[0-9]|i[0-9]|\$[0-9]|q[0-9|a-z|]|q\<.+\>)
+TRUE
+FALSE
+16
+0
+
+
+0
+FALSE
+Built-in commands
+
+(@lock|@switch|@dolist|@pemit|@remit|@emit|@set|@power)
+FALSE
+FALSE
+7
+0
+
+
+0
+FALSE
+3
+[
+]
+TRUE
+0
+(
+)
+TRUE
+0
+{
+}
+TRUE
+0
+0
