@@ -41,15 +41,15 @@ Usage:
 
 ###### You'll find: 0x00.includeTest.inmsh
 
-      This is a MUSH softcode file that demonstrates the compiler's pre-processor "include" directive (it contains softcode and it's the file that gets included in another code file).  This file doesn't get compiled directly when you run the compile.bat file.
+This is a MUSH softcode file that demonstrates the compiler's pre-processor "include" directive (it contains softcode and it's the file that gets included in another code file).  This file doesn't get compiled directly when you run the compile.bat file.
 
 ###### You'll find: 0x01.compileTest.msh
 
-      This is a MUSH softcode file that actually includes the includeTest file and contains additional softcode.  This is the MUSH Softcode that actually gets compiled when you run the compile.bat file.
+This is a MUSH softcode file that actually includes the includeTest file and contains additional softcode.  This is the MUSH Softcode that actually gets compiled when you run the compile.bat file.
 
 ###### You'll find:  ASCIIWorkingFile.ascii
 
-      This is a plain ASCII text file (UTF-8 without a byte order marker) containing 3 pieces of ASCII Art.  2 of them are bubble-font characters (the number 1 and the letter A) and 1 of them is a thunder cloud with a lightning bolt.  This is an ASCII Art file that gets compiled when you run the compile.bat file.
+This is a plain ASCII text file (UTF-8 without a byte order marker) containing 3 pieces of ASCII Art.  2 of them are bubble-font characters (the number 1 and the letter A) and 1 of them is a thunder cloud with a lightning bolt.  This is an ASCII Art file that gets compiled when you run the compile.bat file.
 
 ###### You'll find: cmd.bat
 
