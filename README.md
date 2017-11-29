@@ -29,6 +29,7 @@ The 'debug' configuration for the .vcproj file is basically the same as the comp
 ###### You'll find:  mushCompiler.exe
 
 Usage:
+
       mushCompiler.exe /code -infile=sourcePath -outfile=destPath
 
       mushCompiler.exe /ascii -infile=sourcePath -outfile=destPath
