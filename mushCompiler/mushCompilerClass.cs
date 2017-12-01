@@ -829,22 +829,27 @@ namespace mushCompiler
         /// The result of processing the codeLine, having replaced qVar names with qVar values.
         /// </returns>
         string replaceQVars(string codeLine)
-          {
-               string r = codeLine;
+        {
+            string r = codeLine;
 
-               if (qvarsArray != null)
-               {
-                    for (int i = 0; i < qvarsArray.Length; i++)
+            if (qvarsArray != null)
+            {
+                for (int i = 0; i < qvarsArray.Length; i++)
+                {
+                    // qStr may be null or empty since we allow the softcoder to define named qVars at higher positions without
+                    // defining them at lower ones
+                    if (!string.IsNullOrEmpty(qvarsArray[i]))
                     {
-                         string qStr = i.ToString();
-                         // if i > 9 then convert to A-Z by ascii morphic
-                         if (i > 9) { qStr = ((char)(i + 56)).ToString(); };
-                         r = r.Replace(qvarsArray[i], @"%q" + qStr);
+                        string qStr = i.ToString();
+                        // if i > 9 then convert to A-Z by ascii morphic
+                        if (i > 9) { qStr = ((char)(i + 56)).ToString(); };
+                        r = r.Replace(qvarsArray[i], @"%q" + qStr);
                     }
-               }
+                }
+            }
 
-               return r;
-          }
+            return r;
+        }
 
         /// <summary>
         /// Processes a single line of exploded MUSH code read from a text file, both adding the processed line to its in-memory buffer and returning the processed line to its caller.
