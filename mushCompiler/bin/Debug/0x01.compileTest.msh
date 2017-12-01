@@ -89,7 +89,7 @@ think
 @@ make sure you account for any references to the named parameter in the codeblock.  You don't have to go hunting for those obtuse references to %0 and %1 and %2.  You don't have to 
 @@ manually turn %2 into %1, when you remove parameters, or turn %2 into %3 and then %1 into %2 if you added a parameter between them.  THE COMPILER WILL DO THAT FOR YOU.  Neat, huh?
 @@
-@@ CDIR params ( list, inputDelim, outputDelim )
+@@  CDIR params ( list, inputDelim, outputDelim )
 @@
 &fn-capWords cvDCORef=iter(list,capstr(##),inputDelim,outputDelim)
 

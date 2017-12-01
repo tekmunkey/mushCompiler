@@ -364,12 +364,11 @@ namespace mushCompiler
                     sr.Close();
                     sr.Dispose();
                     sr = null;
-                    compiledCodeString += mcc.CompiledCode;
+                    // add an extra carriage return to compiledCodeString - otherwise if there are 2 includes in a row there's trouble!
+                    compiledCodeString += mcc.CompiledCode + System.Environment.NewLine;
                     mcc = null;
                }
             }
-            // add an extra carriage return to compiledCodeString - otherwise if there are 2 includes in a row there's trouble!
-            compiledCodeString += System.Environment.NewLine;
             return r;
         }
 
