@@ -367,8 +367,10 @@ namespace mushCompiler
                     compiledCodeString += mcc.CompiledCode;
                     mcc = null;
                }
-          }
-          return r;
+            }
+            // add an extra carriage return to compiledCodeString - otherwise if there are 2 includes in a row there's trouble!
+            compiledCodeString += System.Environment.NewLine;
+            return r;
         }
 
         /// <summary>
