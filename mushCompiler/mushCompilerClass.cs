@@ -536,7 +536,8 @@ namespace mushCompiler
                 {
                     // Since we matched a qVarsDirective regex pattern, setting up the qVarsArray is really easy
                     // The next line of code simply rips the comma-delimited parameter names apart into an array
-                    qvarsArray = Regex.Match(compilerDirective, qvarsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.RemoveEmptyEntries);
+                    // Do not use StringSplitOptions.RemoveEmptyEntries - this eliminates the ability to use %q9 without using %q0-%q8
+                    qvarsArray = Regex.Match(compilerDirective, qvarsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.None);
                     // If the user didn't try to trick us by passing an empty qVars field, tidy up the whitespace around each qVar name
                     if (!object.ReferenceEquals(qvarsArray, null) && (qvarsArray.Length > 0))
                     {

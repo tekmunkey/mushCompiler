@@ -62,8 +62,9 @@ namespace mushCompiler
                return r;
           }
 
-          static void Main(string[] args)
+          static int Main(string[] args)
           {
+              int r = 0;
 
                if (isValidArgs(args))
                {
@@ -82,6 +83,7 @@ namespace mushCompiler
                              catch (Exception ex)
                              {
                                  Console.WriteLine(ex.Message);
+                                 r = 1;
                                  break;
                              }
                          }
@@ -94,6 +96,7 @@ namespace mushCompiler
                              catch (Exception ex)
                              {
                                  Console.WriteLine(ex.Message);
+                                 r = 1;
                                  break;
                              }
                          }
@@ -120,6 +123,8 @@ namespace mushCompiler
                GC.Collect();
                //Console.WriteLine(@"Press any key to continue");
                //Console.ReadLine();
+
+               return r;
           }
      }
 }
