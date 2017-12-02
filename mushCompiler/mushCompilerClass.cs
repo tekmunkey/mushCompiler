@@ -803,11 +803,6 @@ namespace mushCompiler
           {
                string r = codeLine;
 
-               if (codeLine == @"&cmd-listCGStats cvDCORef=$+listCGStats:")
-               {
-                   r = codeLine;
-               }
-
                if (paramsArray != null)
                {
                     for (int i = 0; i < paramsArray.Length; i++)
