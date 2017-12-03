@@ -837,7 +837,7 @@ namespace mushCompiler
                     {
                         string qStr = i.ToString();
                         // if i > 9 then convert to A-Z by ascii morphic
-                        if (i > 9) { qStr = ((char)(i + 56)).ToString(); };
+                        if (i > 9) { qStr = ((char)(i + 55)).ToString(); };
                         r = r.Replace(qvarsArray[i], @"%q" + qStr);
                     }
                 }
