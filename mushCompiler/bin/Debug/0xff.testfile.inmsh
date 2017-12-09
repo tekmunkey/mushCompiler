@@ -1,0 +1,118 @@
+@@@@
+@@@@ Gets a display header/footer line, customized to the specified player's screen width and padded to the specified amount on the right and left with whitespace.
+@@@@
+@@@@ If textAlign is 'left' or 1 then textAlign is left.  If textAlign is 'center' or 2 then textAlign is center.  If textAlign is 'right' or 3 then textAlign is right.
+@@@@   * textAlign string designators are matched in full or partial, case-insensitively.  ie:  l and L are left, c and C are center, r and R are right.
+@@@@
+@@
+@@ CDIR params ( prmForPlayer, prmText, prmTextAlign, prmFillChars, prmLeftPad, prmRightPad )
+@@
+@@ CDIR qVars ( qvForPlayer, qvText, qvAlignText, qvFillChars, qvLeftPad, qvRightPad )
+@@
+&fn-displayHeader cvCoreFunctionsObject=
+    [letq
+    (
+        0,
+        if
+        (
+            @@ testing if prmForPlayer was given or invalid
+            cor
+            (
+                not(prmForPlayer),
+                not(pmatch(prmForPlayer))
+            ),
+            @@ prmForPlayer was not given or was invalid
+            v(var-safePlayer),
+            @@ prmForPlayer was given and was valid
+            prmForPlayer
+        ),
+        1,
+        if
+        (
+            @@ testing if text parameter is in fact a real thing
+            strlen(prmText),
+            @@ text parameter is a real thing -- apply headerized surrounds
+            [ansi(h,\[%bprmText%b\])],
+            @@ do nothing
+        ),
+        2,
+        switch
+        (
+            1,
+            cand
+            (
+                @@ testing if textAlign parameter is numeric
+                isnum(prmTextAlign),
+                @@ validating if textAlign parameter is within valid numeric range
+                gte(prmTextAlign,1),
+                lte(prmTextAlign,3)
+            ),
+            @@ textAlign parameter is valid - return it into qVar 0
+            prmTextAlign,
+            @@ if textAlign failed numeric validation, test for string validation
+            @@ if no match with a wildcard, match will return 0 and %q0 is false later
+            t(setr(A,match(left center right,[lcstr(prmTextAlign)]*))),
+            @@ if match is true then return the index value it matched
+            %qA,
+            @@ if there was no valid match don't error, silently default to left-alignment
+            1
+        ),
+        3,
+        if
+        (
+            @@ testing if prmFillChars is actually a thing
+            strlen(prmFillChars),
+            @@ prmFillChars is indeed a thing
+            prmFillChars,
+            @@ prmFillChars length is 0 so default to whitespace fill
+            %b
+        ),
+        4,
+        if
+        (
+            not(prmLeftPad),
+            0,
+            prmLeftPad
+        ),
+        5,
+        if
+        (
+            not(prmRightPad),
+            0,
+            prmRightPad
+        ),
+        [repeat(%b,qvLeftPad)]
+        [switch
+        (
+            @@ print order depends on qvAlignText
+            qvAlignText,
+            @@ 2 is center align
+            2,
+            [center
+            (
+                qvText,
+                sub(width(qvForPlayer,78),add(qvLeftPad,qvRightPad)),
+                qvFillChars
+            )],
+            @@ 3 is right align
+            3,
+            [rjust
+            (
+                qvText,
+                sub(width(qvForPlayer,78),add(qvLeftPad,qvRightPad)),
+                qvFillChars,
+                1
+            )],
+            @@ 1 and everything else is left align
+            1,
+            [ljust
+            (
+                qvText,
+                sub(width(qvForPlayer,78),add(qvLeftPad,qvRightPad)),
+                qvFillChars,
+                1
+            )]
+        )]
+        [repeat(%b,qvRightPad)]
+    )]
+

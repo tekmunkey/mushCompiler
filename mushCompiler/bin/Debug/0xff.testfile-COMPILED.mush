@@ -1,0 +1,7 @@
+@@ 
+@@ Gets a display header/footer line, customized to the specified player's screen width and padded to the specified amount on the right and left with whitespace.
+@@ 
+@@ If textAlign is 'left' or 1 then textAlign is left.  If textAlign is 'center' or 2 then textAlign is center.  If textAlign is 'right' or 3 then textAlign is right.
+@@ * textAlign string designators are matched in full or partial, case-insensitively.  ie:  l and L are left, c and C are center, r and R are right.
+@@ 
+&fn-displayHeader cvCoreFunctionsObject=[letq(0,if(cor(not(%0),not(pmatch(%0))),v(var-safePlayer),%0),1,if(strlen(%1),[ansi(h,\[%b%1%b\])],),2,switch(1,cand(isnum(%2),gte(%2,1),lte(%2,3)),%2,t(setr(A,match(left center right,[lcstr(%2)]*))),%qA,1),3,if(strlen(%3),%3,%b),4,if(not(%4),0,%4),5,if(not(%5),0,%5),[repeat(%b,%q%q4)][switch(%q%q2,2,[center(%q%q1,sub(width(%q%q0,78),add(%q%q4,%q%q5)),%q%q3)],3,[rjust(%q%q1,sub(width(%q%q0,78),add(%q%q4,%q%q5)),%q%q3,1)],1,[ljust(%q%q1,sub(width(%q%q0,78),add(%q%q4,%q%q5)),%q%q3,1)])][repeat(%b,%q%q5)])]

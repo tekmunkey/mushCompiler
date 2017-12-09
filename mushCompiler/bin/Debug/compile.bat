@@ -55,5 +55,8 @@ rem   recurse all .ascii text files and compile to file of same name in .\Compil
 rem
 for %%f in (.\*.ascii) do %compilerPath% /ascii -infile="%%f" -outfile="%outputPath%\%%~nf-COMPILED.ascsh"
 
-if NOT ["%errorlevel%"]==["0"] pause
+rem
+rem next line obsoleted by error trapping/pause in console app
+rem
+rem if NOT ["%errorlevel%"]==["0"] pause
 ENDLOCAL

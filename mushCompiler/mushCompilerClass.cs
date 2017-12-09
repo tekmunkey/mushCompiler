@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace mushCompiler
@@ -27,66 +28,28 @@ namespace mushCompiler
                }
           }
 
-        /// <summary>
-        /// The compilerVariable struct provides a means of defining name=value pairs in the context of your codefile, and converting them into MUSH-meaningful code values.  
-        /// 
-        /// These may be scoped into a file (see cVars), a block in a file (see bVars), a function or command (see qVars and parameters), etc.
-        /// </summary>
-        struct compilerVariableStruct
-        {
-            /// <summary>
-            /// The name by which you'll know this variable.
-            /// </summary>
-            public string name;
-            /// <summary>
-            /// The value assigned to this variable.
-            /// </summary>
-            public string value;
-
-            /// <summary>
-            /// A valid fromCVarString is in the format cVarName=cVarValue or cVarName = cVarValue 
-            /// </summary>
-            /// <param name="fromCVarString">
-            /// When you write a compilerVariable or cVar or cVarString into your MUSH code, you'll write it in the form of 'cVarName=cVarValue' 
-            /// or 'cVarName = cVarValue' (of course you won't write it with quotation marks).  
-            /// 
-            /// What gets passed into this function is that string, to be split into its name/value components for storage and further 
-            /// processing throughout the file lifecycle.
-            /// </param>
-            /// <returns>
-            /// A compilerVariableStruct instance.
-            /// </returns>
-            public static compilerVariableStruct getCVar(string fromCVarString)
-            {
-                compilerVariableStruct r = new compilerVariableStruct();
-
-                // The cVar name is on the left side of the =
-                r.name = fromCVarString.Substring(0, fromCVarString.IndexOf(@"=") - 1).Trim();
-                // The cVar value is on the right side of the =
-                r.value = fromCVarString.Substring(fromCVarString.IndexOf(@"=") + 1).Trim();
-
-                return r;
-            }
-        }
 
         /// <summary>
-        /// This array contains a collection of cVars defined throughout your code file.  You may define as many cVars as you like.
+        /// This list contains a collection of cVars defined throughout your code file.  You may define as many cVars as you like.
         /// </summary>
-        compilerVariableStruct[] cvarsArray = null;
+        List<compilerVariableClass> cvarsList = new List<compilerVariableClass>();
 
         /// <summary>
-        /// This array contains a collection of bVars defined throughout a currently processing code block.  You may define as many bVars as you like.
+        /// This list contains a collection of bVars defined throughout a currently processing code block.  You may define as many bVars as you like.
         /// </summary>
-        compilerVariableStruct[] bvarsArray = null;
-        /// <summary>
-        /// This array contains a collection of params defined throughout a currently processing code block.  You may define as many params as you like.
-        /// </summary>
-        string[] paramsArray = null;
+        List<compilerVariableClass> bvarsList = new List<compilerVariableClass>();
 
         /// <summary>
-        /// This array contains a collection of qVars defined throughout a currently processing code block.  You may define as many qVars as you like.
+        /// This list contains a collection of qVars defined throughout a currently processing code block.  You may define as many qVars as you like, 
+        /// limited by your MUSH platform and generally configurable.
         /// </summary>
-        string[] qvarsArray = null;
+        List<compilerVariableClass> qvarsList = new List<compilerVariableClass>();
+
+        /// <summary>
+        /// This list contains a collection of params defined throughout a currently processing code block.  You may define as many params as you like, 
+        /// limited by your MUSH platform and generally configurable.
+        /// </summary>
+        List<compilerVariableClass> paramsList = new List<compilerVariableClass>();
 
         /// <summary>
         /// This toggle value is only changed when the compiler encounters the BEGIN BLOCK or END BLOCK compiler directives, which manually dictate certain compiler behaviors with regard to 
@@ -126,7 +89,7 @@ namespace mushCompiler
         /// 
         /// Leading and trailing spaces will be trimmed out of the path, so be careful when naming your include files.
         /// </summary>
-        string includeDirectivePattern = @"^(INC|INCLUDE)\s+(.*)$";
+        string includeDirectivePattern = @"^(?:INC|INCLUDE)\s+(.*)$";
 
         /// <summary>
         /// cVars are variables set into code files for replacement by the compiler.  cVar replacements are scoped at the entire file level.  
@@ -183,7 +146,7 @@ namespace mushCompiler
         /// 
         /// Leading and trailing spaces will always be trimmed out so params (foo,bar,baz) is exactly the same as params(foo, bar, baz) and params ( foo , bar , baz )
         /// </summary>
-        string paramsDirectivePattern = @"^(PARAMETERS|PARAMS)\s*\((.*?)\)$";
+        string paramsDirectivePattern = @"^(?:PARAMETERS|PARAMS)\s*\((.*?)\)$";
 
         /// <summary>
         /// qVars are variables set in MUSH code by setq() and setr() calls.  qVar replacements are reset after processing each codeblock.  
@@ -350,7 +313,7 @@ namespace mushCompiler
                 if (r)
                 {
                     // We have found an include directive, so the next line of code extracts the filename to include from the directive
-                    string incFile = Regex.Match(compilerDirective, includeDirectivePattern, RegexOptions.IgnoreCase).Groups[2].Value.Trim();
+                    string incFile = Regex.Match(compilerDirective, includeDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim();
                     
                     // Reading in the file means compiling it independently and then copying its compiled/finished product 
                     // into ours
@@ -404,10 +367,30 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, cvarsDirectivePattern, RegexOptions.IgnoreCase);
                 if (r)
                 {
-                    // We have found a cVar directive, so the next line either expands the cVarsArray or instantiates it new if it is currently null (null references can't be expanded)
-                    if (cvarsArray != null) { Array.Resize<compilerVariableStruct>(ref cvarsArray, cvarsArray.Length + 1); } else { cvarsArray = new compilerVariableStruct[1]; }
-                    // The next line concocts a new compilerVariableStruct instance and adds it to the cVarsArray
-                    cvarsArray[cvarsArray.Length - 1] = compilerVariableStruct.getCVar(compilerDirective.Substring(5));
+                    if (object.ReferenceEquals(this.cvarsList, null))
+                    {
+                        this.cvarsList = new List<compilerVariableClass>();
+                    }
+                    // pass through the existing cvars to ensure we're not doubling up an existing cvar
+                    compilerVariableClass cv = compilerVariableClass.getCompilerVariable(compilerDirective.Substring(5));
+                    for (int i = 0; i < this.cvarsList.Count; i++)
+                    {
+                        // testing if named var already exists, and removing it if so
+                        if (cvarsList[i].name.Equals(cv.name)) { cvarsList.RemoveAt(i); }
+                    }
+                    // don't even try an if/else addition in the loop above - it gets too complex with multiple possible cVar declarations per file
+                    this.cvarsList.Add(cv);
+                    //
+                    // ISSUE:  
+                    //        When a user declares similar variable names such as cvText and cvTextAlign, with the shorter version declared earlier, 
+                    //        replacement overwrites part of cvTextAlign.  ie:  if the value of cvText is %0 then occurrences of cvTextAlign become 
+                    //        %0Align before cvTextAlign replacement can occur
+                    // SOLUTION:
+                    //        Sort items by name length so that the longest items process/replace FIRST, forcing the "most complete match" to replace 
+                    //        ahead of any partial matches.
+                    //  
+                    this.cvarsList.Sort((x, y) => x.name.Length.CompareTo(y.name.Length));
+                    this.cvarsList.Reverse();
                 }
             }
             return r;
@@ -445,10 +428,30 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, bvarsDirectivePattern, RegexOptions.IgnoreCase);
                 if (r)
                 {
-                    // We have found a bVar directive, so the next line either expands the bVarsArray or instantiates it new if it is currently null (null references can't be expanded)
-                    if (bvarsArray != null) { Array.Resize<compilerVariableStruct>(ref bvarsArray, bvarsArray.Length + 1); } else { bvarsArray = new compilerVariableStruct[1]; }
-                    // The next line concocts a new compilerVariableStruct instance and adds it to the bVarsArray
-                    bvarsArray[bvarsArray.Length - 1] = compilerVariableStruct.getCVar(compilerDirective.Substring(5));
+                    if (object.ReferenceEquals(this.bvarsList, null))
+                    {
+                        this.bvarsList = new List<compilerVariableClass>();
+                    }
+                    // pass through the existing bvars to ensure we're not doubling up an existing bvar
+                    compilerVariableClass bv = compilerVariableClass.getCompilerVariable(compilerDirective.Substring(5));
+                    for (int i = 0; i < this.bvarsList.Count; i++)
+                    {
+                        // testing if named var already exists, and removing it if so
+                        if (bvarsList[i].name.Equals(bv.name)) { bvarsList.RemoveAt(i); }
+                    }
+                    // don't even try an if/else addition in the loop above - it gets too complex with multiple possible bVar declarations per codeblock
+                    this.bvarsList.Add(bv);
+                    //
+                    // ISSUE:  
+                    //        When a user declares similar variable names such as bvText and bvTextAlign, with the shorter version declared earlier, 
+                    //        replacement overwrites part of bvTextAlign.  ie:  if the value of bvText is %0 then occurrences of bvTextAlign become 
+                    //        %0Align before bvTextAlign replacement can occur
+                    // SOLUTION:
+                    //        Sort items by name length so that the longest items process/replace FIRST, forcing the "most complete match" to replace 
+                    //        ahead of any partial matches.
+                    //  
+                    this.bvarsList.Sort((x, y) => x.name.Length.CompareTo(y.name.Length));
+                    this.bvarsList.Reverse();
                 }
             }
             return r;
@@ -486,16 +489,33 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase);
                 if (r)
                 {
+                    if (object.ReferenceEquals(this.paramsList, null))
+                    {
+                        this.paramsList = new List<compilerVariableClass>();
+                    }
+                    // no else - just clear paramsList in all events - this way if a softcoder has a brainfart and double-declares params we don't let them shoot their own foot
+                    this.paramsList.Clear();
                     // Since we matched a paramsDirective regex pattern, setting up the paramsArray is really easy
                     // The next line of code simply rips the comma-delimited parameter names apart into an array
-                    paramsArray = Regex.Match(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase).Groups[2].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] paramsArray = Regex.Match(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.RemoveEmptyEntries);
                     // If the user didn't try to trick us by passing an empty parameters field, tidy up the whitespace around each parameter name
                     if (!object.ReferenceEquals(paramsArray, null) && (paramsArray.Length > 0))
                     {
                         for (int i = 0; i < paramsArray.Length; i++)
                         {
-                            paramsArray[i] = paramsArray[i].Trim();
+                            this.paramsList.Add(compilerVariableClass.getCompilerVariable(paramsArray[i].Trim(),@"%" + i.ToString()));
                         }
+                        //
+                        // ISSUE:  
+                        //        When a user declares similar variable names such as bvText and bvTextAlign, with the shorter version declared earlier, 
+                        //        replacement overwrites part of bvTextAlign.  ie:  if the value of bvText is %0 then occurrences of bvTextAlign become 
+                        //        %0Align before bvTextAlign replacement can occur
+                        // SOLUTION:
+                        //        Sort items by name length so that the longest items process/replace FIRST, forcing the "most complete match" to replace 
+                        //        ahead of any partial matches.
+                        //  
+                        this.paramsList.Sort((x, y) => x.name.Length.CompareTo(y.name.Length));
+                        this.paramsList.Reverse();
                     }
                 }
             }
@@ -534,17 +554,46 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, qvarsDirectivePattern, RegexOptions.IgnoreCase);
                 if (r)
                 {
+                    if (object.ReferenceEquals(this.qvarsList, null))
+                    {
+                        this.qvarsList = new List<compilerVariableClass>();
+                    }
+                    //
+                    // no else - never clear qvarsList except at End of Block - this way if a softcoder wants to redeclare qVars or add declarations repeatedly, they can
+                    //
                     // Since we matched a qVarsDirective regex pattern, setting up the qVarsArray is really easy
                     // The next line of code simply rips the comma-delimited parameter names apart into an array
                     // Do not use StringSplitOptions.RemoveEmptyEntries - this eliminates the ability to use %q9 without using %q0-%q8
-                    qvarsArray = Regex.Match(compilerDirective, qvarsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.None);
+                    string[] qvarsArray = Regex.Match(compilerDirective, qvarsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.None);
                     // If the user didn't try to trick us by passing an empty qVars field, tidy up the whitespace around each qVar name
                     if (!object.ReferenceEquals(qvarsArray, null) && (qvarsArray.Length > 0))
                     {
                         for (int i = 0; i < qvarsArray.Length; i++)
                         {
-                            qvarsArray[i] = qvarsArray[i].Trim();
+                            string qStr = i.ToString();
+                            // if i > 9 then convert to A-Z by ascii morphic
+                            if (i > 9) { qStr = ((char)(i + 55)).ToString(); };
+                            qStr = @"%q" + qStr.Trim();
+                            // must test each member of the existing qVars list for a pre-existing %qreg
+                            for (int i2 = 0; i2 < qvarsList.Count; i2++)
+                            {
+                                // testing if the new %qreg number/letter already exists in the list, and remove it if so
+                                if (qvarsList[i2].value.Equals(qStr)) { qvarsList.RemoveAt(i2); }
+                            }
+                            // don't even try an if/else addition in the loop above - it gets too complex with multiple possible qVar declarations per codeblock
+                            qvarsList.Add(compilerVariableClass.getCompilerVariable(qvarsArray[i].Trim(), @"%q" + qStr.Trim()));
                         }
+                        //
+                        // ISSUE:  
+                        //        When a user declares similar variable names such as qvText and qvTextAlign, with the shorter version declared earlier, 
+                        //        replacement overwrites part of qvTextAlign.  ie:  if the value of qvText is %q0 then occurrences of qvTextAlign become 
+                        //        %q0Align before qvTextAlign replacement can occur
+                        // SOLUTION:
+                        //        Sort items by name length so that the longest items process/replace FIRST, forcing the "most complete match" to replace 
+                        //        ahead of any partial matches.
+                        //  
+                        this.qvarsList.Sort((x, y) => x.name.Length.CompareTo(y.name.Length));
+                        this.qvarsList.Reverse();
                     }
                 }
             }
@@ -600,14 +649,7 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, endBlockDirectivePattern);
                 if (r)
                 {
-                    // Clean up the block-level compiler variables
-                    bvarsArray = null;
-                    qvarsArray = null;
-                    paramsArray = null;
-                    // Make sure the output string has clean linebreaks
-                    compiledCodeString += System.Environment.NewLine;
-                    // Flip the explicit isInBlock
-                    this.isInBlock = false;
+                    this.exitBlock();
                 }
             }
 
@@ -752,19 +794,19 @@ namespace mushCompiler
         /// The result of processing the codeLine, having replaced cVar names with cVar values.
         /// </returns>
         string replaceCVars(string codeLine)
-          {
-               string r = codeLine;
+        {
+            string r = codeLine;
 
-               if (cvarsArray != null)
-               {
-                    foreach (compilerVariableStruct cvar in cvarsArray)
-                    {
-                         r = r.Replace(cvar.name, cvar.value);
-                    }
-               }
+            if (!object.ReferenceEquals(this.cvarsList, null))
+            {
+                foreach (compilerVariableClass cvar in this.cvarsList)
+                {
+                    r = cvar.replaceVariable(r);
+                }
+            }
 
-               return r;
-          }
+            return r;
+        }
 
         /// <summary>
         /// Given an input codeLine, performs bVar replacement within the string and returns the processed value.
@@ -776,43 +818,19 @@ namespace mushCompiler
         /// The result of processing the codeLine, having replaced bVar names with bVar values.
         /// </returns>
         string replaceBVars(string codeLine)
-          {
-               string r = codeLine;
+        {
+            string r = codeLine;
 
-               if (bvarsArray != null)
-               {
-                    foreach (compilerVariableStruct bvar in bvarsArray)
-                    {
-                         r = r.Replace(bvar.name, bvar.value);
-                    }
-               }
+            if (!object.ReferenceEquals(this.bvarsList, null))
+            {
+                foreach (compilerVariableClass bvar in this.bvarsList)
+                {
+                    r = bvar.replaceVariable(r);
+                }
+            }
 
-               return r;
-          }
-
-        /// <summary>
-        /// Given an input codeLine, performs params replacement within the string and returns the processed value.
-        /// </summary>
-        /// <param name="codeLine">
-        /// A single line of exploded MUSH code read from a text file.
-        /// </param>
-        /// <returns>
-        /// The result of processing the codeLine, having replaced params names with params values.
-        /// </returns>
-        string replaceParams(string codeLine)
-          {
-               string r = codeLine;
-
-               if (paramsArray != null)
-               {
-                    for (int i = 0; i < paramsArray.Length; i++)
-                    {
-                         r = r.Replace(paramsArray[i], @"%" + i.ToString());
-                    }
-               }
-
-               return r;
-          }
+            return r;
+        }
 
         /// <summary>
         /// Given an input codeLine, performs qVar replacement within the string and returns the processed value.
@@ -827,21 +845,55 @@ namespace mushCompiler
         {
             string r = codeLine;
 
-            if (qvarsArray != null)
+            if (!object.ReferenceEquals(this.qvarsList, null))
             {
-                for (int i = 0; i < qvarsArray.Length; i++)
+                foreach (compilerVariableClass qvar in this.qvarsList)
                 {
-                    // qStr may be null or empty since we allow the softcoder to define named qVars at higher positions without
-                    // defining them at lower ones
-                    if (!string.IsNullOrEmpty(qvarsArray[i]))
-                    {
-                        string qStr = i.ToString();
-                        // if i > 9 then convert to A-Z by ascii morphic
-                        if (i > 9) { qStr = ((char)(i + 55)).ToString(); };
-                        r = r.Replace(qvarsArray[i], @"%q" + qStr);
-                    }
+                    r = qvar.replaceVariable(r);
                 }
             }
+
+            return r;
+        }
+
+        /// <summary>
+        /// Given an input codeLine, performs params replacement within the string and returns the processed value.
+        /// </summary>
+        /// <param name="codeLine">
+        /// A single line of exploded MUSH code read from a text file.
+        /// </param>
+        /// <returns>
+        /// The result of processing the codeLine, having replaced params names with params values.
+        /// </returns>
+        string replaceParams(string codeLine)
+        {
+            string r = codeLine;
+
+            if (!object.ReferenceEquals(this.paramsList, null))
+            {
+                foreach (compilerVariableClass param in this.paramsList)
+                {
+                    r = param.replaceVariable(r);
+                }
+            }
+
+            return r;
+        }
+
+
+
+        bool exitBlock()
+        {
+            bool r = true;
+
+            // Clean up the block-level compiler variables
+            this.bvarsList.Clear();
+            this.qvarsList.Clear();
+            this.paramsList.Clear();
+            // Make sure the output string has clean linebreaks
+            compiledCodeString += System.Environment.NewLine;
+            // Flip the explicit isInBlock
+            this.isInBlock = false;
 
             return r;
         }
@@ -891,11 +943,7 @@ namespace mushCompiler
                         if ((compiledCodeString.Length >= System.Environment.NewLine.Length) && !compiledCodeString.Substring(compiledCodeString.Length-2,System.Environment.NewLine.Length).Equals(System.Environment.NewLine))
                         {
                              // ... if not then go ahead and terminate the current line of output
-                            compiledCodeString += System.Environment.NewLine;
-                            // Clean up the block-level compiler variables
-                            bvarsArray = null;
-                            qvarsArray = null;
-                            paramsArray = null;
+                            this.exitBlock();
                         }
                     }
                     // .Trim() removes whitespace in several forms so if codeLine is already a System.Environment.Newline then this doesn't 
@@ -957,22 +1005,32 @@ namespace mushCompiler
         ~mushCompilerClass()
         {
             this.beginBlockDirectivePattern = null;
-            this.bvarsArray = null;
             this.bvarsDirectivePattern = null;
             this.commentDirectivePattern = null;
             this.commentOrDirectivePattern = null;
             this.compiledCodeString = null;
             this.compilerDirectivePattern = null;
-            this.cvarsArray = null;
             this.cvarsDirectivePattern = null;
             this.endBlockDirectivePattern = null;
             this.includeDirectivePattern = null;
             this.leadingSpacePattern = null;
             this.needsTrailingSpacePattern = null;
-            this.paramsArray = null;
             this.paramsDirectivePattern = null;
-            this.qvarsArray = null;
             this.qvarsDirectivePattern = null;
+
+            this.paramsList.Clear();
+            this.paramsList = null;
+
+            this.qvarsList.Clear();
+            this.qvarsList = null;
+
+            this.bvarsList.Clear();
+            this.bvarsList = null;
+
+            this.cvarsList.Clear();
+            this.cvarsList = null;
+
+            GC.Collect();
         }
      }
 }

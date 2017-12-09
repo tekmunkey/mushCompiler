@@ -111,20 +111,33 @@ namespace mushCompiler
                     {
                          finalCode = finalCode.Substring(0, finalCode.Length - 2);
                     }
+                    
+                   StreamWriter sw = new StreamWriter(outfile);
+                   try
+                   {
+                       sw.Write(finalCode);
+                   }
+                   catch (Exception ex)
+                   {
+                       Console.WriteLine(ex.Message);
+                       Console.WriteLine(ex.StackTrace);
+                       r = 1;
+                   }
+                   sw.Close();
+                   sw.Dispose();
+                   sw = null;
 
-                    StreamWriter sw = new StreamWriter(outfile);
-                    sw.Write(finalCode);
-
-                    sw.Close();
-                    sw.Dispose();
-                    sw = null;
-                    mcc = null;
+                   mcc = null;
                }
                
                GC.Collect();
-               //Console.WriteLine(@"Press any key to continue");
-               //Console.ReadLine();
 
+               if (r != 0)
+               {
+                   Console.WriteLine();
+                   Console.WriteLine(@"    Errors detected in compile.  Press any key to continue.");
+                   Console.ReadKey();
+               }
                return r;
           }
      }
