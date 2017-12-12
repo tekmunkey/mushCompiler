@@ -318,7 +318,7 @@ namespace mushCompiler
                     // Reading in the file means compiling it independently and then copying its compiled/finished product 
                     // into ours
                     System.IO.StreamReader sr = new System.IO.StreamReader(incFile);
-                    mushCompilerClass mcc = new mushCompilerClass();
+                    mushCompilerClass mcc = new mushCompilerClass(this.cvarsList);
                     do
                     {
                         string rawCodeLine = sr.ReadLine();
@@ -880,8 +880,6 @@ namespace mushCompiler
             return r;
         }
 
-
-
         bool exitBlock()
         {
             bool r = true;
@@ -1001,6 +999,26 @@ namespace mushCompiler
                compiledCodeString += r;
                return r;
           }
+
+        /// <summary>
+        /// Initializes a new instance of the mushCompilerClass with empty/default options and variables.
+        /// </summary>
+        internal mushCompilerClass()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the mushCompilerClass with the specified cVars (file-level-scoped compiler variables).  
+        /// 
+        /// Generally intended only for use with includes.
+        /// </summary>
+        /// <param name="withInitialCvars">
+        /// A list of cVars to initialize the new mushCompilerClass instance with.
+        /// </param>
+        internal mushCompilerClass(List<compilerVariableClass> withInitialCvars)
+        {
+            this.cvarsList = withInitialCvars;
+        }
 
         ~mushCompilerClass()
         {
