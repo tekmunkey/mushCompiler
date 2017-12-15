@@ -1,6 +1,6 @@
 # 2017-12-15
 
-## Changelog initiated
+* Changelog initiated
 
 ## programArgsClass created
 
