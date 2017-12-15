@@ -4,6 +4,10 @@
 
 * programArgsClass created
 
+* mushCompilerClass renamed to mushCompilerClass_OLD
+
+* asciiCompilerClass created - functionality rewritten/overhauled from mushCompilerClass_OLD (left in original for posterity)
+
 * Program.COMPILE_TYPE_* constants created
 
 ## * Added new ASCII Compile Type.
@@ -16,7 +20,7 @@ The demo compile.bat (in bin/Debug directory) updated
 
 * Default COMPILE_TYPE_CODE defined.  User no longer must specify /code at commandline unless it pleases them to do so.
 
-## *     If user does wish to specify compile type they must now specify:
+*     If user does wish to specify compile type they must now specify:
 
     /compiletype=code
 
@@ -31,7 +35,3 @@ The demo compile.bat (in bin/Debug directory) updated
 ######     OR
 
     /compiletype=ascii-multiline
-
-* mushCompilerClass renamed to mushCompilerClass_OLD
-
-* asciiCompilerClass created - functionality rewritten/overhauled from mushCompilerClass_OLD (left in original for posterity)
