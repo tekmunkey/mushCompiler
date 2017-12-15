@@ -52,9 +52,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="asciiCompilerClass.cs" />
     <Compile Include="compilerVariableClass.cs" />
-    <Compile Include="mushCompilerClass.cs" />
+    <Compile Include="mushCompilerClass_OLD.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="programArgsClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

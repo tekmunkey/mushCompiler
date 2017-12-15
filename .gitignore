@@ -1,17 +1,19 @@
 
 
-mushCompiler.suo
+**/*.lnk
 
-EditPad/backupJGCS.bat
+**/*.suo
 
-mushCompiler/bin/Debug/mushCompiler.pdb
+**/backupJGCS.bat
 
-mushCompiler/obj
+**/*.pdb
 
-mushCompiler/bin/Debug/Compiles
+**/obj
 
-mushCompiler/mushCompiler.csproj.user
+**/bin/Debug/Compiles
 
-mushCompiler/bin/Debug/mushCompiler.vshost.exe
+**/*.csproj.user
 
-mushCompiler/bin/Debug/mushCompiler.vshost.exe.manifest
+**/*.vshost.exe
+
+**/*.vshost.exe.manifest

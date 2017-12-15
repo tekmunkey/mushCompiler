@@ -1,144 +1,263 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace mushCompiler
 {
-     class Program
-     {
-          static string infile = string.Empty;
-          static string outfile = string.Empty;
+    class Program
+    {
+        internal const int COMPILE_TYPE_CODE  = 0x00000000;
+        internal const int COMPILE_TYPE_ASCII_SINGLELINE = 0x00000001;
+        internal const int COMPILE_TYPE_ASCII_MULTILINE = 0x00000002;
 
-          static bool isValidArgs(string[] args)
-          {
-               bool r = (args.Length == 3);
-               if (!r)
-               {
-                    Console.WriteLine(@"Invalid arguments:  3 arguments required (" + args.Length.ToString() + @" arguments supplied)");
-               }
-               else
-               {
-                    r = (args[0].ToLower().Equals(@"/code") || args[0].ToLower().Equals(@"/ascii"));
+        /// <summary>
+        /// Converts an integer value such as COMPILE_TYPE_CODE to a string value suitable for output.
+        /// </summary>
+        /// <param name="compileTypeConst">
+        /// One of the const/enumerated COMPILE_TYPE_ type values.
+        /// </param>
+        /// <returns>
+        /// A string value suitable for human-readable output.
+        /// </returns>
+        internal static string getCompileTypeString(int compileTypeConst)
+        {
+            string r = "Invalid Type Specifier";
+            if (compileTypeConst == COMPILE_TYPE_CODE)
+            {
+                r = @"MUSH Code";
+            }
+            else if (compileTypeConst == COMPILE_TYPE_ASCII_SINGLELINE)
+            {
+                r = @"ASCII Single Line";
+            }
+            else if (compileTypeConst == COMPILE_TYPE_ASCII_MULTILINE)
+            {
+                r = @"ASCII Multi Line";
+            }
+            return r;
+        }
 
-                    if (!r)
+        /// <summary>
+        /// Contains a collection of command line arguments, after processing into our own variety.
+        /// </summary>
+        static List<programArgsClass> cmdLineArgs = null;
+
+        /// <summary>
+        /// Contains a default or user-defined compile type.
+        /// </summary>
+        static int compileType = COMPILE_TYPE_CODE;
+
+        /// <summary>
+        /// Contains the user-defined input file for this compile operation.
+        /// </summary>
+        static string infile = string.Empty;
+        /// <summary>
+        /// Contains the user-defined output file for this compile operation.
+        /// </summary>
+        static string outfile = string.Empty;
+
+        /// <summary>
+        /// Contains a value indicating how many spaces compiler output values should indent when sub-values provide output (tree branch 
+        /// output desigation).
+        /// </summary>
+        static int outputIndent = 4;
+
+        static bool isValidArgs(string[] args)
+        {
+            bool r = (cmdLineArgs.Count >= 2);
+            if (!r)
+            {
+                writeOutput(@"Invalid arguments:  at least 2 arguments required (" + cmdLineArgs.Count.ToString() + @" arguments supplied)", 1);
+            }
+            else
+            {
+                for (int i = 0; i < cmdLineArgs.Count; i++)
+                {
+                    // a boolean indicating whether the commandline argument is valid
+                    programArgsClass arg = cmdLineArgs[i];
+                    string argName = arg.name.ToLower();
+                    string argValue = arg.value;
+
+                    if (argName.Equals(@"-compiletype") || argName.Equals(@"--compiletype") || argName.Equals(@"/compiletype"))
                     {
-                         Console.WriteLine(@"Invalid arguments:  First argument must be /code or /ascii");
+                        argValue = argValue.ToLower();
+                        bool typeFound = false;
+                        
+                        if (argValue.Equals(@"code"))
+                        {
+                            compileType = COMPILE_TYPE_CODE;
+                            typeFound = true;
+                        }
+                        else if (argValue.Equals(@"ascii") || argValue.Equals(@"ascii-single") || argValue.Equals(@"ascii-singleline"))
+                        {
+                            compileType = COMPILE_TYPE_ASCII_SINGLELINE;
+                            typeFound = true;
+                        }
+                        else if (argValue.Equals(@"ascii-multi") || argValue.Equals(@"ascii-multiline"))
+                        {
+                            compileType = COMPILE_TYPE_ASCII_MULTILINE;
+                            typeFound = true;
+                        }
+
+                        if (!typeFound)
+                        {
+                            writeOutput(@"Invalid -compiletype argument:  " + arg.value, 1);
+                            r = false;
+                            break; // from commandline argument processing
+                        }
+                        
+                        continue; // skip to next iteration if we haven't broken
                     }
-                    else if (r && args[1].ToLower().StartsWith(@"-infile=") && args[2].ToLower().StartsWith(@"-outfile="))
+                    else if (argName.Equals(@"-infile") || argName.Equals(@"--infile") || argName.Equals(@"/infile"))
                     {
-                         // test if args0 after -infile= is an existing file
-                         r = File.Exists(args[1].Substring(8));
-                         if (!r)
-                         {
-                              Console.WriteLine(@"Invalid arguments:  -infile " + args[1].Substring(8) + @" is not a valid filename");
-                         }
-                         else
-                         {
-                              infile = args[1].Substring(8);
-                              outfile = args[2].Substring(9); 
-                         }
+                        r = File.Exists(arg.value);
+                        if (!r)
+                        {
+                            writeOutput(@"Invalid infile argument:  " + arg.value + @" is not a valid filename",1);
+                            break; // from commandline argument processing
+                        }
+                        else
+                        {
+                            infile = arg.value;
+                            continue; // skip to next iteration if we haven't broken
+                        }
                     }
-                    else if (r && args[2].ToLower().StartsWith(@"-infile=") && args[1].ToLower().StartsWith(@"-outfile="))
+                    else if (argName.Equals(@"-outfile") || argName.Equals(@"--outfile") || argName.Equals(@"/outfile"))
                     {
-                         // test if args1 after -infile= is an existing file
-                         r = File.Exists(args[3].Substring(8));
-                         if (!r)
-                         {
-                              Console.WriteLine(@"Invalid arguments:  -infile " + args[3].Substring(8) + @" is not a valid filename");
-                         }
-                         else
-                         {
-                              infile = args[2].Substring(8);
-                              outfile = args[1].Substring(9); 
-                         }
+
+                        System.IO.FileInfo fi = null;
+                        try
+                        {
+                            fi = new System.IO.FileInfo(arg.value);
+                        }
+                        catch (Exception) 
+                        {
+                        }
+                        
+                        if (object.ReferenceEquals(fi, null))
+                        {
+                            // file name is not valid
+                            writeOutput(@"Invalid outfile argument:  " + arg.value + @" is not a good filename", 1);
+                            break; // from commandline argument processing
+                        }
+                        else
+                        {
+                            // file name is valid... May check for existence by calling fi.Exists.
+                            outfile = arg.value;
+                            fi = null;
+                            continue; // skip to next iteration if we haven't broken
+                        }
                     }
                     else
                     {
-                         Console.WriteLine(@"Invalid arguments:  One argument must be -infile=filename and one argument must be -outfile=filename");
+                        r = false;
+                        writeOutput(@"Invalid commandline argument:  " + arg.name, 1);
+                        break; // from commandline argument processing
                     }
 
-                    
-               }
-               
-               return r;
-          }
+                    if (!r) { break; }
+                }
+            }
+            return r;
+        }
 
-          static int Main(string[] args)
-          {
-              int r = 0;
+        static int Main(string[] args)
+        {
+            int r = int.MaxValue;
 
-               if (isValidArgs(args))
-               {
+            cmdLineArgs = programArgsClass.getProgramArgsList(args);
+
+            if (isValidArgs(args) && !string.IsNullOrEmpty(infile) && !string.IsNullOrEmpty(outfile))
+            {
+                r = 0;
+                writeOutput(@"Beginning compile on:  " + infile, 0);
+
+                if (compileType == COMPILE_TYPE_CODE)
+                {
                     StreamReader sr = new StreamReader(infile);
-                    mushCompilerClass mcc = new mushCompilerClass();
+                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD();
 
                     do
                     {
-                         string rawCodeLine = sr.ReadLine();
-                         if (args[0].ToLower().Equals(@"/code"))
-                         {
-                             try
-                             {
-                                 mcc.processCodeLine(rawCodeLine);
-                             }
-                             catch (Exception ex)
-                             {
-                                 Console.WriteLine(ex.Message);
-                                 Console.WriteLine(ex.StackTrace);
-                                 r = 1;
-                                 break;
-                             }
-                         }
-                         else if (args[0].ToLower().Equals(@"/ascii"))
-                         {
-                             try
-                             {
-                                 mcc.processASCIILine(rawCodeLine);
-                             }
-                             catch (Exception ex)
-                             {
-                                 Console.WriteLine(ex.Message);
-                                 r = 1;
-                                 break;
-                             }
-                         }
+                        string rawCodeLine = sr.ReadLine();
+                        try
+                        {
+                            mcc.processCodeLine(rawCodeLine);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
+                            r = 1;
+                            break;
+                        }
+
                     } while (!sr.EndOfStream);
                     sr.Close();
                     sr.Dispose();
                     sr = null;
 
                     string finalCode = mcc.CompiledCode;
-                    if (args[0].ToLower().Equals(@"/ascii") && finalCode.EndsWith(@"%r"))
+
+                    StreamWriter sw = new StreamWriter(outfile);
+                    try
                     {
-                         finalCode = finalCode.Substring(0, finalCode.Length - 2);
+                        sw.Write(finalCode);
                     }
-                    
-                   StreamWriter sw = new StreamWriter(outfile);
-                   try
-                   {
-                       sw.Write(finalCode);
-                   }
-                   catch (Exception ex)
-                   {
-                       Console.WriteLine(ex.Message);
-                       Console.WriteLine(ex.StackTrace);
-                       r = 1;
-                   }
-                   sw.Close();
-                   sw.Dispose();
-                   sw = null;
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
+                        r = 1;
+                    }
+                    sw.Close();
+                    sw.Dispose();
+                    sw = null;
 
-                   mcc = null;
-               }
-               
-               GC.Collect();
+                    mcc = null;
+                }
+                else if (compileType > 0) // 0 is code - everything greater is ASCII-something-something
+                {
+                    asciiCompilerClass acc = new asciiCompilerClass();
+                    acc.doCompile(infile, outfile, compileType);
+                    acc = null;
+                }
 
-               if (r != 0)
-               {
-                   Console.WriteLine();
-                   Console.WriteLine(@"    Errors detected in compile.  Press any key to continue.");
-                   Console.ReadKey();
-               }
-               return r;
-          }
-     }
+                writeOutput(@"Finished compile on:   " + infile,0);
+            }
+            else
+            {
+                writeOutput(@"Invalid arguments supplied by user", 1);
+            }
+
+            GC.Collect();
+
+            if (r != 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine(@"    Errors detected in compile.  Press any key to continue.");
+                Console.ReadKey();
+            }
+            return r;
+        }
+
+        /// <summary>
+        /// Provides a way to write output to the console in a standardized format.
+        /// </summary>
+        /// <param name="output">
+        /// The output to print to the terminal or log.
+        /// </param>
+        /// <param name="indentdepth">
+        /// Indicates how deep the caller is into the calling tree before calling writeOutput.  Determines how much indentation is 
+        /// applied to the output.
+        /// </param>
+        internal static void writeOutput(string output, int indentdepth)
+        {
+            string finalOutput = new string(' ', (indentdepth * outputIndent));
+            finalOutput += output;
+            Console.WriteLine(finalOutput);
+            finalOutput = null;
+            GC.Collect();
+        }
+    }
 }

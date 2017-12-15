@@ -13,7 +13,7 @@ namespace mushCompiler
     /// The compiler removes line terminators and leading and trailing whitespace from individual lines, recognizing blocks based on the 
     /// format of the input file, and outputs one-line conglomerations suitable for MUSH platform consumers.
     /// </summary>
-    public class mushCompilerClass
+    public class mushCompilerClass_OLD
     {
         /// <summary>
         /// This field is where "compiled" code is constructed at runtime.
@@ -314,11 +314,16 @@ namespace mushCompiler
                 {
                     // We have found an include directive, so the next line of code extracts the filename to include from the directive
                     string incFile = Regex.Match(compilerDirective, includeDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim();
+
+                    if (!System.IO.File.Exists(incFile))
+                    {
+                        throw new System.IO.FileNotFoundException(@"    Invalid include file: " + incFile);
+                    }
                     
                     // Reading in the file means compiling it independently and then copying its compiled/finished product 
                     // into ours
                     System.IO.StreamReader sr = new System.IO.StreamReader(incFile);
-                    mushCompilerClass mcc = new mushCompilerClass(this.cvarsList);
+                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD(this.cvarsList);
                     do
                     {
                         string rawCodeLine = sr.ReadLine();
@@ -1003,7 +1008,7 @@ namespace mushCompiler
         /// <summary>
         /// Initializes a new instance of the mushCompilerClass with empty/default options and variables.
         /// </summary>
-        internal mushCompilerClass()
+        internal mushCompilerClass_OLD()
         {
         }
 
@@ -1015,12 +1020,12 @@ namespace mushCompiler
         /// <param name="withInitialCvars">
         /// A list of cVars to initialize the new mushCompilerClass instance with.
         /// </param>
-        internal mushCompilerClass(List<compilerVariableClass> withInitialCvars)
+        internal mushCompilerClass_OLD(List<compilerVariableClass> withInitialCvars)
         {
             this.cvarsList = withInitialCvars;
         }
 
-        ~mushCompilerClass()
+        ~mushCompilerClass_OLD()
         {
             this.beginBlockDirectivePattern = null;
             this.bvarsDirectivePattern = null;
