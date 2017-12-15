@@ -2,11 +2,11 @@
 
 * Changelog initiated
 
-## programArgsClass created
+* programArgsClass created
 
-## Program.COMPILE_TYPE_* constants created
+* Program.COMPILE_TYPE_* constants created
 
-## Added new ASCII Compile Type.
+## * Added new ASCII Compile Type.
 
 Previously, ASCII compiles were performed with only code-usage in mind, compiling ASCII art down to a single continuous line with linebreaks replaced with %r, and MUSH-parsed characters escaped so that a whole ASCII art image could be stored in an object attribute.
 
@@ -14,24 +14,24 @@ A new multi-line compile type has been created, allowing ASCII art to be formatt
 
 The demo compile.bat (in bin/Debug directory) updated
 
-## Default COMPILE_TYPE_CODE defined.  User no longer must specify /code at commandline unless it pleases them to do so.
+* Default COMPILE_TYPE_CODE defined.  User no longer must specify /code at commandline unless it pleases them to do so.
 
-######     If user does wish to specify compile type they must now specify:
+## *     If user does wish to specify compile type they must now specify:
 
-    * /compiletype=code
+    /compiletype=code
 
 ######     OR
 
-    * /compiletype=ascii
+    /compiletype=ascii
 
 ######     (which is the same as)
 
-    * /compiletype=ascii-singleline
+    /compiletype=ascii-singleline
 
 ######     OR
 
-    * /compiletype=ascii-multiline
+    /compiletype=ascii-multiline
 
-## mushCompilerClass renamed to mushCompilerClass_OLD
+* mushCompilerClass renamed to mushCompilerClass_OLD
 
-## asciiCompilerClass created - functionality rewritten/overhauled from mushCompilerClass_OLD (left in original for posterity)
+* asciiCompilerClass created - functionality rewritten/overhauled from mushCompilerClass_OLD (left in original for posterity)
