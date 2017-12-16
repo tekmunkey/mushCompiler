@@ -35,7 +35,7 @@ rem
 rem The next batch command will:
 rem   recurse all .msh code files and compile to file of same name in .\Compiles, replacing .msh with .mush extension
 rem
-for %%f in (.\*.msh) do %compilerPath% /compiletype=code -infile="%%f" -outfile="%outputPath%\%%~nf-COMPILED.mush"
+for %%i in (.\*.msh) do %compilerPath% /compiletype=code -infile="%%i" -outfile="%outputPath%\%%~ni-COMPILED.mush"
 
 rem
 rem 'compiling' ASCII art is done simply by escaping out all the characters that MU/SH/X platforms like to try and process,
@@ -53,7 +53,7 @@ rem
 rem rem The next batch command will:
 rem   recurse all .ascii text files and compile to file of same name in .\Compiles, replacing .ascii with .ascsh extension
 rem
-for %%f in (.\*.ascii) do %compilerPath% /compiletype=ascii-singleline -infile="%%f" -outfile="%outputPath%\%%~nf-singleLine-COMPILED.ascsh"
+for %%i in (.\*.ascii) do %compilerPath% /compiletype=ascii-singleline -infile="%%i" -outfile="%outputPath%\%%~ni-singleLine-COMPILED.ascsh"
 
 rem
 rem A new format for 'compiled' ASCII art was added, for creating ASCII art files for when one wishes to cut and paste or 
@@ -72,7 +72,7 @@ rem
 rem rem The next batch command will:
 rem   recurse all .ascii text files and compile to file of same name in .\Compiles, replacing .ascii with .ascsh extension
 rem
-for %%f in (.\*.ascii) do %compilerPath% /compiletype=ascii-multiline -infile="%%f" -outfile="%outputPath%\%%~nf-multiLine-COMPILED.ascsh"
+for %%i in (.\*.ascii) do %compilerPath% /compiletype=ascii-multiline -infile="%%i" -outfile="%outputPath%\%%~ni-multiLine-COMPILED.ascsh"
 
 rem
 rem next line obsoleted by error trapping/pause in console app
