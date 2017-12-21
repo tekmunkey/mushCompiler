@@ -1,4 +1,4 @@
-# PATREON
+# Support tekmunkey via Patreon
 
 If you'd like to support my free software developments, my patreon can be found at:
 
