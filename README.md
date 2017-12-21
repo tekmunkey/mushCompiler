@@ -1,3 +1,9 @@
+# PATREON
+
+If you'd like to support my free software developments, my patreon can be found at:
+
+https://www.patreon.com/tekmunkey
+
 # mushCompiler
 
 ## HISTORICAL/SCENIC ROUTE:  (FEEL FREE TO SKIP DOWN TO USAGE NOTES)
