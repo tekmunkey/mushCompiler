@@ -32,24 +32,24 @@ namespace mushCompiler
         /// <summary>
         /// This list contains a collection of cVars defined throughout your code file.  You may define as many cVars as you like.
         /// </summary>
-        List<compilerVariableClass> cvarsList = new List<compilerVariableClass>();
+        List<compilerVariableClass> cvarsList = null;
 
         /// <summary>
         /// This list contains a collection of bVars defined throughout a currently processing code block.  You may define as many bVars as you like.
         /// </summary>
-        List<compilerVariableClass> bvarsList = new List<compilerVariableClass>();
+        List<compilerVariableClass> bvarsList = null;
 
         /// <summary>
         /// This list contains a collection of qVars defined throughout a currently processing code block.  You may define as many qVars as you like, 
         /// limited by your MUSH platform and generally configurable.
         /// </summary>
-        List<compilerVariableClass> qvarsList = new List<compilerVariableClass>();
+        List<compilerVariableClass> qvarsList = null;
 
         /// <summary>
         /// This list contains a collection of params defined throughout a currently processing code block.  You may define as many params as you like, 
         /// limited by your MUSH platform and generally configurable.
         /// </summary>
-        List<compilerVariableClass> paramsList = new List<compilerVariableClass>();
+        List<compilerVariableClass> paramsList = null;
 
         /// <summary>
         /// This toggle value is only changed when the compiler encounters the BEGIN BLOCK or END BLOCK compiler directives, which manually dictate certain compiler behaviors with regard to 
@@ -890,9 +890,21 @@ namespace mushCompiler
             bool r = true;
 
             // Clean up the block-level compiler variables
-            this.bvarsList.Clear();
-            this.qvarsList.Clear();
-            this.paramsList.Clear();
+            if (this.bvarsList != null)
+            {
+                this.bvarsList.Clear();
+            }
+
+            if (this.qvarsList != null)
+            {
+                this.qvarsList.Clear();
+            }
+
+            if (this.paramsList != null)
+            {
+                this.paramsList.Clear();
+            }
+
             // Make sure the output string has clean linebreaks
             compiledCodeString += System.Environment.NewLine;
             // Flip the explicit isInBlock
@@ -1041,17 +1053,29 @@ namespace mushCompiler
             this.paramsDirectivePattern = null;
             this.qvarsDirectivePattern = null;
 
-            this.paramsList.Clear();
-            this.paramsList = null;
+            if (this.paramsList != null)
+            {
+                this.paramsList.Clear();
+                this.paramsList = null;
+            }
 
-            this.qvarsList.Clear();
-            this.qvarsList = null;
+            if (this.qvarsList != null)
+            {
+                this.qvarsList.Clear();
+                this.qvarsList = null;
+            }
 
-            this.bvarsList.Clear();
-            this.bvarsList = null;
+            if (this.bvarsList != null)
+            {
+                this.bvarsList.Clear();
+                this.bvarsList = null;
+            }
 
-            this.cvarsList.Clear();
-            this.cvarsList = null;
+            if (this.cvarsList != null)
+            {
+                this.cvarsList.Clear();
+                this.cvarsList = null;
+            }
 
             GC.Collect();
         }
