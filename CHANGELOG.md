@@ -61,3 +61,7 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-01-18
 
 * No clue exactly when this bug was introduced, but:  At some point an "update" to the DotNET Framework introduced a problem with initializing System.Collections.Generic.List objects at declaration time.  Specifically, Lists would work for a little while (if you add items to them and then refer back to this.ListObject they would return their elements) and then randomly they would quit working (for no apparent reason and with absolutely no consistency you would refer back to this.ListObject and it would return no elements at all, as if it were a 'new' ListObject as declared).  When I say 'without consistency' I mean that across a hundred runtime tests, this error occurred in the same place 20 or 30 times and then occurred in different places 15 or 20 times, and different places still another 40 times.  I shudder to think how many people replaced RAM or CPUs and still didn't fix the problem.  The solution seems to be to declare these objects as 'null' and instantiate them as needed rather than instantiate them at declaration time.  Nice work, lowest bidder in unnamed but likely guessable 3rd World Country who Microsoft outsourced this update to!!!
+
+# 2018-01-20
+
+* Added @switch/all and @switch/all/inline to needsTrailingSpacePattern regex pattern (allowing MUSH coders to use these command switches with the @switch statement)

@@ -781,7 +781,7 @@ namespace mushCompiler
                                                  @"@FUNCTION|@FUNCTION/PRIVILEGED|" +
                                                  @"@DOLIST|@DOLIST/DELIMIT|@DOLIST/INLINE|@DOLIST/INLINE/DELIMIT|@DOLIST/DELIMIT/INLINE|" +
                                                  @"@DOL|@DOL/DELIMIT|" +
-                                                 @"@SWITCH|@SWITCH/INLINE|@SWITCH/INLINE/FIRST|@SWITCH/FIRST/INLINE|@SWITCH/FIRST|" + 
+                                                 @"@SWITCH|@SWITCH/INLINE|@SWITCH/INLINE/FIRST|@SWITCH/FIRST/INLINE|@SWITCH/FIRST|@SWITCH/ALL|@SWITCH/ALL/INLINE|" + 
                                                  @"@WAIT|@WAIT/UNTIL" +
                                                  @")+\s*$"; // closing the regex
         bool needsTrailingSpace(string codeLine)
