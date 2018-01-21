@@ -65,3 +65,9 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-01-20
 
 * Added @switch/all and @switch/all/inline to needsTrailingSpacePattern regex pattern (allowing MUSH coders to use these command switches with the @switch statement)
+
+* Updated EditPad Syntax Coloring
+
+#2018-01-21
+
+* OK SO the update on 2018-01-18 wasn't Microsoft's fault.  Was my fault.  Not a bug in DotNET.  Something stupid I did.  Found it.  Fixed it.  By myself.  Sorry, 3rd world programmers.

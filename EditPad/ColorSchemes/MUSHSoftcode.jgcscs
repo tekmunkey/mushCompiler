@@ -64,7 +64,7 @@ FALSE
 FALSE
 Built-in commands
 
-(@lock|@switch|@dolist|@pemit|@remit|@emit|@set|@power)
+(@lock|@switch|@dolist|@pemit|@remit|@emit|@set|@nuke|@power)
 FALSE
 FALSE
 7

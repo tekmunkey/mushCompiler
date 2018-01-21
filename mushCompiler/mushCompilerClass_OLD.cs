@@ -32,24 +32,24 @@ namespace mushCompiler
         /// <summary>
         /// This list contains a collection of cVars defined throughout your code file.  You may define as many cVars as you like.
         /// </summary>
-        List<compilerVariableClass> cvarsList = null;
+        List<compilerVariableClass> cvarsList = new List<compilerVariableClass>();
 
         /// <summary>
         /// This list contains a collection of bVars defined throughout a currently processing code block.  You may define as many bVars as you like.
         /// </summary>
-        List<compilerVariableClass> bvarsList = null;
+        List<compilerVariableClass> bvarsList = new List<compilerVariableClass>();
 
         /// <summary>
         /// This list contains a collection of qVars defined throughout a currently processing code block.  You may define as many qVars as you like, 
         /// limited by your MUSH platform and generally configurable.
         /// </summary>
-        List<compilerVariableClass> qvarsList = null;
+        List<compilerVariableClass> qvarsList = new List<compilerVariableClass>();
 
         /// <summary>
         /// This list contains a collection of params defined throughout a currently processing code block.  You may define as many params as you like, 
         /// limited by your MUSH platform and generally configurable.
         /// </summary>
-        List<compilerVariableClass> paramsList = null;
+        List<compilerVariableClass> paramsList = new List<compilerVariableClass>();
 
         /// <summary>
         /// This toggle value is only changed when the compiler encounters the BEGIN BLOCK or END BLOCK compiler directives, which manually dictate certain compiler behaviors with regard to 
@@ -1034,7 +1034,10 @@ namespace mushCompiler
         /// </param>
         internal mushCompilerClass_OLD(List<compilerVariableClass> withInitialCvars)
         {
-            this.cvarsList = withInitialCvars;
+            if (withInitialCvars != null)
+            {
+                this.cvarsList = new List<compilerVariableClass>(withInitialCvars);
+            }
         }
 
         ~mushCompilerClass_OLD()
