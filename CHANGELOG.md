@@ -68,6 +68,12 @@ Of course you're welcome to use the same parameter lead-character for everything
 
 * Updated EditPad Syntax Coloring
 
-#2018-01-21
+# 2018-01-21
 
 * OK SO the update on 2018-01-18 wasn't Microsoft's fault.  Was my fault.  Not a bug in DotNET.  Something stupid I did.  Found it.  Fixed it.  By myself.  Sorry, 3rd world programmers.
+
+# 2018-01-22
+
+* Added @break and @assert to mushCompiler's recognized command syntax (needsTrailingSpacePattern, a regex that allows floating words to retain a trailing space when trimming/concatenating lines)
+
+* Added @break and @assert to Editpad syntax highlighting
