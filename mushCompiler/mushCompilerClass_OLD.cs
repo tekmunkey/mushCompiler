@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace mushCompiler
 {
@@ -15,6 +16,11 @@ namespace mushCompiler
     /// </summary>
     public class mushCompilerClass_OLD
     {
+        /// <summary>
+        /// Contains the filename currently being compiled.
+        /// </summary>
+        string filePath = string.Empty;
+
         /// <summary>
         /// This field is where "compiled" code is constructed at runtime.
         /// </summary>
@@ -315,6 +321,82 @@ namespace mushCompiler
                     // We have found an include directive, so the next line of code extracts the filename to include from the directive
                     string incFile = Regex.Match(compilerDirective, includeDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim();
 
+                    //
+                    // Issue:     neither DotNET or mushCompiler automagically track "working directory" into subdirectory changes during include operations (for the 
+                    //            organizationally compulsive among us, which is every coder of any merit at all).
+                    // Solution:  Store the filename on each mushCompiler class, and if/when another include operation is called with a non-rooted Path (which must be 
+                    //            relative to the currently processing file path), convert that relative path by prepending the current instance's directory path, 
+                    //            concatenating the new directory path, then concatenating the new filename
+                    //
+                    if (!Path.IsPathRooted(incFile))
+                    {
+                        // And of course there's a platform-specific directory separator characters - screw DotNET and Windows and Linux - allow \ or / regardless
+                        char[] dirSC = new char[] { (char)0x2f, (char)0x5c };
+
+                        // The parent filepath is the directory name of the current mushCompilerClass instance, if any
+                        string parFP = Path.GetDirectoryName(this.filePath);
+                        // System.IO.Path doesn't provide any functions that do this AT ALL so we must account for usage of ./ and ../ ourselves
+                        string[] parFPArr = parFP.Split(dirSC, StringSplitOptions.RemoveEmptyEntries);
+
+                        // The include filepath is the relative path from the parent filepath, if any
+                        string incFP = Path.GetDirectoryName(incFile);
+                        string[] incFPArr = incFP.Split(dirSC, StringSplitOptions.RemoveEmptyEntries);
+
+                        // Working FORWARD through incFP and BACKWARD through parFP
+                        //   * This represents the format of ../../filename.msh
+                        //     + Where the first .. means step backward 1 directory, the second .. means step backward another directory
+                        for (int i = 0; i < incFPArr.Length; i++)
+                        {
+                            if (parFPArr.Length > 0)
+                            {
+                                if (incFPArr[i].Equals(@".."))
+                                {
+                                    //
+                                    // The include filepath segment here is '..'
+                                    //
+                                    // If there are any items left in parFPArr at all, simply drop the last element from parFPArr
+                                    Array.Resize<string>(ref parFPArr, parFPArr.Length - 1);
+                                }
+                                else if (incFPArr[i].Equals(@"."))
+                                {
+                                    // 
+                                    // The include filepath segment here is '.'
+                                    //   * Simply ignore this - the '.' means THIS DIRECTORY RIGHT HERE
+                                    //
+                                }
+                                else
+                                {
+                                    //
+                                    // Anything else at all is either '.' or is a directory name - it wouldn't be a file name because of the calls to Path.GetDirectoryName
+                                    //
+                                    Array.Resize<string>(ref parFPArr, parFPArr.Length + 1);
+                                    parFPArr[parFPArr.Length - 1] = incFPArr[i];
+                                }
+                            }
+                        }
+
+                        string newFQP = string.Empty;
+                        // This loop should never error because parFPArr would never be null, but may be of length 0, in which case this loop would simply 
+                        // do nothing
+                        for (int i = 0; i < parFPArr.Length; i++)
+                        {
+                            newFQP += parFPArr[i] + Path.DirectorySeparatorChar;
+                        }
+                        newFQP += Path.GetFileName(incFile);
+
+                        incFile = newFQP;
+
+                        newFQP = null;
+
+                        incFPArr = null;
+                        incFP = null;
+
+                        parFPArr = null;
+                        parFP = null;
+                        
+                        dirSC = null;
+                    }
+
                     if (!System.IO.File.Exists(incFile))
                     {
                         throw new System.IO.FileNotFoundException(@"    Invalid include file: " + incFile);
@@ -323,7 +405,7 @@ namespace mushCompiler
                     // Reading in the file means compiling it independently and then copying its compiled/finished product 
                     // into ours
                     System.IO.StreamReader sr = new System.IO.StreamReader(incFile);
-                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD(this.cvarsList);
+                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD(incFile, this.cvarsList);
                     do
                     {
                         string rawCodeLine = sr.ReadLine();
@@ -337,6 +419,8 @@ namespace mushCompiler
                     mcc = null;
                }
             }
+
+            GC.Collect();
             return r;
         }
 
@@ -1022,8 +1106,9 @@ namespace mushCompiler
         /// <summary>
         /// Initializes a new instance of the mushCompilerClass with empty/default options and variables.
         /// </summary>
-        internal mushCompilerClass_OLD()
+        internal mushCompilerClass_OLD(string filepath)
         {
+            this.filePath = filepath;
         }
 
         /// <summary>
@@ -1034,8 +1119,13 @@ namespace mushCompiler
         /// <param name="withInitialCvars">
         /// A list of cVars to initialize the new mushCompilerClass instance with.
         /// </param>
-        internal mushCompilerClass_OLD(List<compilerVariableClass> withInitialCvars)
+        internal mushCompilerClass_OLD(string filepath, List<compilerVariableClass> withInitialCvars)
         {
+            char[] pathcopy = new char[filepath.Length];
+            filepath.CopyTo(0, pathcopy, 0, pathcopy.Length);
+            this.filePath = new string(pathcopy);
+            pathcopy = null;
+
             if (withInitialCvars != null)
             {
                 this.cvarsList = new List<compilerVariableClass>(withInitialCvars);
@@ -1081,6 +1171,8 @@ namespace mushCompiler
                 this.cvarsList.Clear();
                 this.cvarsList = null;
             }
+
+            this.filePath = null;
 
             GC.Collect();
         }

@@ -118,7 +118,7 @@ namespace mushCompiler
                         }
                         else
                         {
-                            infile = arg.value;
+                            infile = Path.GetFullPath(arg.value);
                             continue; // skip to next iteration if we haven't broken
                         }
                     }
@@ -143,7 +143,7 @@ namespace mushCompiler
                         else
                         {
                             // file name is valid... May check for existence by calling fi.Exists.
-                            outfile = arg.value;
+                            outfile = Path.GetFullPath(arg.value);
                             fi = null;
                             continue; // skip to next iteration if we haven't broken
                         }
@@ -175,7 +175,7 @@ namespace mushCompiler
                 if (compileType == COMPILE_TYPE_CODE)
                 {
                     StreamReader sr = new StreamReader(infile);
-                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD();
+                    mushCompilerClass_OLD mcc = new mushCompilerClass_OLD(infile);
 
                     do
                     {
