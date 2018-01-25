@@ -81,3 +81,5 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-01-24
 
 * Added file-include feature/function allowing subdirectory traversal and tracking so files in large projects can be organized in subdirectories and relative paths in include directives would work properly.  Yes, this had to be added manually and No I don't consider it a bug or an issue with my code.  DotNET Framework didn't recognize .\somefile.txt as a valid file when called from a System.IO.FileStream instance that had a file open in the same directory as somefile.txt.
+
+* Discovered/corrected a bug/issue I had introduced (when fixing a previous issue or adding a previous feature) where an extra %q string was being added to qVar string replacements.

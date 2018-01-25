@@ -662,7 +662,7 @@ namespace mushCompiler
                             string qStr = i.ToString();
                             // if i > 9 then convert to A-Z by ascii morphic
                             if (i > 9) { qStr = ((char)(i + 55)).ToString(); };
-                            qStr = @"%q" + qStr.Trim();
+                            qStr = qStr.Trim();
                             // must test each member of the existing qVars list for a pre-existing %qreg
                             for (int i2 = 0; i2 < qvarsList.Count; i2++)
                             {
