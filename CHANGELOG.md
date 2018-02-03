@@ -83,3 +83,11 @@ Of course you're welcome to use the same parameter lead-character for everything
 * Added file-include feature/function allowing subdirectory traversal and tracking so files in large projects can be organized in subdirectories and relative paths in include directives would work properly.  Yes, this had to be added manually and No I don't consider it a bug or an issue with my code.  DotNET Framework didn't recognize .\somefile.txt as a valid file when called from a System.IO.FileStream instance that had a file open in the same directory as somefile.txt.
 
 * Discovered/corrected a bug/issue I had introduced (when fixing a previous issue or adding a previous feature) where an extra %q string was being added to qVar string replacements.
+
+# 2018-01-25
+
+* Added NULL compiler directive (@@ CDIR NULL) providing facility for piping through literal @@ characters without whitespace and without linebreaks into codeblocks, such as for injecting the @@ as a "Null Delimiter" specifier into softcode for TinyMUX.
+
+# 2018-02-03
+
+* Added SAFEPARAMETERS and SAFEPARAMS (alongside PARAMETERS AND PARAMS) compiler directives.  When specified SAFE, the params directives convert named variables to positional values with objeval() ie: objeval(%#,%0) rather than simply %0

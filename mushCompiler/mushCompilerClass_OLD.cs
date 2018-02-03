@@ -141,6 +141,8 @@ namespace mushCompiler
         /// @@ CDIR params(foo, bar, baz) -> %0, %1, %2
         /// @@ CDIR params (foo, bar, baz) -> %0, %1, %2
         /// @@ CDIR params () ->
+        /// @@ CDIR safeparameters ( someparam, otherparam ) -> objeval( %#, %0, %1 )
+        /// @@ CDIR SAFEPARAMS ( foo, bar, baz ) -> objeval( %#, %0, %1, %2 )
         /// 
         /// The content between the parentheses is returned as regex group 2 if it exists.  You aren't required to declare params and if you declare it with no parameters 
         /// there's no harm done.
@@ -152,7 +154,7 @@ namespace mushCompiler
         /// 
         /// Leading and trailing spaces will always be trimmed out so params (foo,bar,baz) is exactly the same as params(foo, bar, baz) and params ( foo , bar , baz )
         /// </summary>
-        string paramsDirectivePattern = @"^(?:PARAMETERS|PARAMS)\s*\((.*?)\)$";
+        string paramsDirectivePattern = @"^(PARAMETERS|PARAMS|SAFEPARAMETERS|SAFEPARAMS)\s*\((.*?)\)$";
 
         /// <summary>
         /// qVars are variables set in MUSH code by setq() and setr() calls.  qVar replacements are reset after processing each codeblock.  
@@ -279,6 +281,15 @@ namespace mushCompiler
         /// in a distributable codefile.  
         /// </summary>
         string commentDirectivePattern = @"^\s*(@@|CMT|CMTS|COMMENT|COMMENTS)\s*(\S+.*)?$";
+
+        /// <summary>
+        /// Null Directives are transmuted into literal @@ characters into the output file with all whitespace around them trimmed out and with no leading or trailing linebreaks.  
+        /// 
+        /// This compiler/preprocessor directive was added to support TinyMUX' "Null Delimiter" (which you would pass into iter() for example if you wanted output to be run together, 
+        /// with no spaces or pipes or whatever), which is in fact @@.  Without the ability to inject this @@ into the output file without additional formatting, TinyMUX softcoders 
+        /// would not be able to make use of this handy-dandy feature!
+        /// </summary>
+        string nullDirectivePattern = @"^NULL\s*?$";
 
         string leadingSpacePattern = @"^\s+(.*?)$";
 
@@ -578,6 +589,9 @@ namespace mushCompiler
                 r = Regex.IsMatch(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase);
                 if (r)
                 {
+                    // paramsType will be relevant in a little moment
+                    string paramsType = Regex.Match(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim();
+
                     if (object.ReferenceEquals(this.paramsList, null))
                     {
                         this.paramsList = new List<compilerVariableClass>();
@@ -586,13 +600,21 @@ namespace mushCompiler
                     this.paramsList.Clear();
                     // Since we matched a paramsDirective regex pattern, setting up the paramsArray is really easy
                     // The next line of code simply rips the comma-delimited parameter names apart into an array
-                    string[] paramsArray = Regex.Match(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] paramsArray = Regex.Match(compilerDirective, paramsDirectivePattern, RegexOptions.IgnoreCase).Groups[2].Value.Trim().Split(new string[] { @"," }, StringSplitOptions.RemoveEmptyEntries);
                     // If the user didn't try to trick us by passing an empty parameters field, tidy up the whitespace around each parameter name
                     if (!object.ReferenceEquals(paramsArray, null) && (paramsArray.Length > 0))
                     {
                         for (int i = 0; i < paramsArray.Length; i++)
                         {
-                            this.paramsList.Add(compilerVariableClass.getCompilerVariable(paramsArray[i].Trim(),@"%" + i.ToString()));
+                            string paramValue = @"%" + i.ToString();
+                            if (!string.IsNullOrEmpty(paramsType) && (paramsType.ToUpper().Equals(@"SAFEPARAMETERS") || paramsType.ToUpper().Equals(@"SAFEPARAMS")))
+                            {
+                                paramValue = @"objeval(%#,%" + i.ToString() + @")";
+                            }
+
+                            this.paramsList.Add(compilerVariableClass.getCompilerVariable(paramsArray[i].Trim(),paramValue));
+
+                            paramValue = null;
                         }
                         //
                         // ISSUE:  
@@ -606,6 +628,9 @@ namespace mushCompiler
                         this.paramsList.Sort((x, y) => x.name.Length.CompareTo(y.name.Length));
                         this.paramsList.Reverse();
                     }
+
+                    paramsType = null;
+                    GC.Collect();
                 }
             }
             return r;
@@ -769,10 +794,39 @@ namespace mushCompiler
                     // We are in fact dealing with a comment so the next line extracts the comment itself from the codeline
                     string comment = Regex.Match(compilerDirective, commentDirectivePattern, RegexOptions.None).Groups[2].Value.Trim();
                     // Finally we inject the comment into the compiled codeline, following the MUSH standard @@ 
-                    compiledCodeString += @"@@ " + comment + System.Environment.NewLine;
+                    compiledCodeString += @"@@" + ( !string.IsNullOrEmpty(comment) ? @" " + comment : string.Empty ) + System.Environment.NewLine;
                 }
             }
 
+            return r;
+        }
+
+        /// <summary>
+        /// Processes NULL directive codelines.
+        /// </summary>
+        /// <param name="codeLine">
+        /// A single line of exploded MUSH code read from a text file.
+        /// </param>
+        /// <returns>
+        /// A boolean value.  True if the string was processed as a NULL Directive.  Otherwise False.
+        /// </returns>
+        bool processNullDirective(string codeLine)
+        {
+            bool r = false;
+            // Testing if this is a compiler directive or comment - a proper comment may be either one
+            if (isCompilerDirective(codeLine) || isCommentOrDirective(codeLine))
+            {
+                // We have found a compiler directive or possibly a comment, but what kind? The next line of code determines exactly what we're dealing with regardless
+                string compilerDirective = Regex.Match(codeLine, compilerDirectivePattern, RegexOptions.None).Groups[1].Value.Trim();
+                // If this is in fact a NULL BLOCK directive, then the next line sets our return value to True.  Otherwise it is set to false (or remains false)
+                r = Regex.IsMatch(compilerDirective, nullDirectivePattern, RegexOptions.IgnoreCase);
+                if (r)
+                {
+                    // We are in fact dealing with a null
+                    // Finally we inject the comment into the compiled codeline, following the MUX standard @@ 
+                    compiledCodeString += @"@@";
+                }
+            }
             return r;
         }
 
@@ -797,6 +851,7 @@ namespace mushCompiler
                 if (!b) { b = processBvarsDirective(codeLine); }
                 if (!b) { b = processParamsDirective(codeLine); }
                 if (!b) { b = processQVarDirective(codeLine); }
+                if (!b) { b = processNullDirective(codeLine); }
                 if (!b) { b = processBeginBlockDirective(codeLine); }
                 if (!b) { b = processEndBlockDirective(codeLine); }
             }
