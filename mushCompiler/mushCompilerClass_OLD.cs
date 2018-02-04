@@ -1164,6 +1164,28 @@ namespace mushCompiler
         internal mushCompilerClass_OLD(string filepath)
         {
             this.filePath = filepath;
+            //
+            //   The code ENACTOR is the object or player that called the command or function from the "commandline."  In all forms of MUSH this replacement is 
+            //   %# and one of the most famous and common errors on the books is confusing and/or typoing %# with %!, which causes insane and insanely difficult 
+            //   to find problems at runtime.  Using these explicit cVars with the mushCompiler should help to eliminate that error entirely and forever.
+            //
+            this.cvarsList.Add(compilerVariableClass.getCompilerVariable(@"cvENACTOR",@"%#"));
+            //
+            //   The code EXECUTOR is the object that actually contains and is performing the code execution that is currently running.  In all forms of MUSH this 
+            //   replacement is %! and one of the most famous and common errors on the books is confusing and/or typoing %# with %!, which causes insane and insanely 
+            //   difficult to find problems at runtime.  Using these explicit cVars with the mushCompiler should help to eliminate that error entirely and forever.
+            //
+            this.cvarsList.Add(compilerVariableClass.getCompilerVariable(@"cvEXECUTOR",@"%!"));
+            //
+            //   TinyMUX actually demands/requires a NULL-Delimiter in iter() output delimiter fields where you want nothing to appear for delimiters, where Penn (for 
+            //   example) lets you just leave the field blank/empty for null.  We did add the NULL Compiler Directive for this purpose, but that's unhandy in places where 
+            //   a person actually wants an @@ with a comma after it too, so introducing a cVar.  Sheesh!
+            //
+            this.cvarsList.Add(compilerVariableClass.getCompilerVariable(@"cvNULL",@"@@"));
+            //
+            //   The cvCodeObject cVar is required for various include files in the coreCodePackage - defaulting it here is a courtesy
+            //
+            this.cvarsList.Add(compilerVariableClass.getCompilerVariable(@"cvCodeObject", @"%!"));
         }
 
         /// <summary>
