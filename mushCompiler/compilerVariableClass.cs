@@ -23,6 +23,11 @@ namespace mushCompiler
         public string value;
 
         /// <summary>
+        /// Indicates whether this variable defaults to wrapping in objeval()
+        /// </summary>
+        public bool defaultSafe;
+
+        /// <summary>
         /// Performs replacement of all occurrances of this compilerVariableClass instance's name with this instance's value, within the specified string.
         /// </summary>
         /// <param name="codeLine">
@@ -34,9 +39,24 @@ namespace mushCompiler
         public string replaceVariable(string codeLine)
         {
             string r = codeLine;
+
             if (!string.IsNullOrEmpty(this.name.Trim()) && !string.IsNullOrEmpty(r))
             {
-                r = r.Replace(this.name, this.value);
+                r = r.Replace(this.name + @"UNSAFE", this.value);
+                r = r.Replace(this.name + @"SAFE", @"objeval(%#," + this.value + @")");
+                r = r.Replace(this.name + @"LIT", @"lit(" + this.value + @")");
+
+                if (!this.defaultSafe)
+                {
+                    r = r.Replace(this.name, this.value);
+                }
+                else
+                {
+                    r = r.Replace(this.name, @"objeval(%#," + this.value + @")");
+                }
+
+                
+                
             }
             return r;
         }

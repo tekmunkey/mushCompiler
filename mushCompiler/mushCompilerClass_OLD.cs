@@ -606,15 +606,11 @@ namespace mushCompiler
                     {
                         for (int i = 0; i < paramsArray.Length; i++)
                         {
-                            string paramValue = @"%" + i.ToString();
+                            this.paramsList.Add(compilerVariableClass.getCompilerVariable(paramsArray[i].Trim(),@"%" + i.ToString()));
                             if (!string.IsNullOrEmpty(paramsType) && (paramsType.ToUpper().Equals(@"SAFEPARAMETERS") || paramsType.ToUpper().Equals(@"SAFEPARAMS")))
                             {
-                                paramValue = @"objeval(%#,%" + i.ToString() + @")";
+                                this.paramsList[this.paramsList.Count - 1].defaultSafe = true;
                             }
-
-                            this.paramsList.Add(compilerVariableClass.getCompilerVariable(paramsArray[i].Trim(),paramValue));
-
-                            paramValue = null;
                         }
                         //
                         // ISSUE:  
