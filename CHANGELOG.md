@@ -91,3 +91,7 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-02-03
 
 * Added SAFEPARAMETERS and SAFEPARAMS (alongside PARAMETERS AND PARAMS) compiler directives.  When specified SAFE, the params directives convert named variables to positional values with objeval() ie: objeval(%#,%0) rather than simply %0
+
+# 2018-02-06
+
+* Modded the way PARAMS/SAFEPARAMS and all variable (cvar/bvar/qvar/params) operates as follows:  When specifying safeparams, this now sets objeval() as the **default** output style for parameter variable replacements.  All variables now have the additional reference styles of variableSAFE, variableUNSAFE, and variableLIT where adding the SAFE keyword replaces the variable name with objeval(%#,variableValue) whether the variable was originally declared with safeparams or not, variableUNSAFE replaces the variable name with the raw variableValue whether the variable was originally declared with safeparams or not, and variableLIT replaces the variable name with lit(variableValue)
