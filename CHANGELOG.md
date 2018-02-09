@@ -95,3 +95,7 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-02-06
 
 * Modded the way PARAMS/SAFEPARAMS and all variable (cvar/bvar/qvar/params) operates as follows:  When specifying safeparams, this now sets objeval() as the **default** output style for parameter variable replacements.  All variables now have the additional reference styles of variableSAFE, variableUNSAFE, and variableLIT where adding the SAFE keyword replaces the variable name with objeval(%#,variableValue) whether the variable was originally declared with safeparams or not, variableUNSAFE replaces the variable name with the raw variableValue whether the variable was originally declared with safeparams or not, and variableLIT replaces the variable name with lit(variableValue)
+
+# 2018-02-09
+
+* Added cVar replacement to INCLUDE directive processing, so for example a static directory path may be set into a cVar and re-used repeatedly for multiple file includes (and passed into those included files as cVars traverse INCLUDE boundaries)

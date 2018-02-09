@@ -53,7 +53,7 @@ FALSE
 FALSE
 % Substitutions
 
-\%([a-c]|[k-l]|[n-p]|[r-u]|[v-x][a-z]|\#|\~|\:|\%|\@|\!|\?|\=|\+|[0-9]|i[0-9]|\$[0-9]|q[0-9|a-z|]|q\<.+\>)
+\%([a-c]|[k-l]|[n-p]|[r-u]|[v-x][a-z]|\#|\~|\:|\%|\@|\!|\?|\=|\+|[0-9][0-9]|i[0-9]|\$[0-9]|q[0-9|a-z|]|q\<.+\>)
 TRUE
 FALSE
 16
@@ -64,7 +64,7 @@ FALSE
 FALSE
 Built-in commands
 
-(@lock|@switch|@dolist|@assert|@break|@pemit|@remit|@emit|@set|@nuke|@power)
+(@lock|@switch|@dolist|@pemit|@remit|@emit|@set|@power)
 FALSE
 FALSE
 7

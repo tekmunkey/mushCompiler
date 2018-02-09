@@ -331,6 +331,10 @@ namespace mushCompiler
                 {
                     // We have found an include directive, so the next line of code extracts the filename to include from the directive
                     string incFile = Regex.Match(compilerDirective, includeDirectivePattern, RegexOptions.IgnoreCase).Groups[1].Value.Trim();
+                    //
+                    // Allow the use of cVars in include file paths
+                    //
+                    incFile = this.replaceCVars(incFile);
 
                     //
                     // Issue:     neither DotNET or mushCompiler automagically track "working directory" into subdirectory changes during include operations (for the 
