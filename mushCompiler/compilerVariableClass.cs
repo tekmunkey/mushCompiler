@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+
 namespace mushCompiler
 {
     /// <summary>
@@ -42,6 +43,49 @@ namespace mushCompiler
 
             if (!string.IsNullOrEmpty(this.name.Trim()) && !string.IsNullOrEmpty(r))
             {
+                //
+                // the actual syntax for using cvars to set qvars should be:
+                //   cvarSETQ(theNewValueForThisQVarHere)
+                //   * If and only if the cVar is initialized as a q-register already
+                //
+                if (r.Contains(this.name + @"SETQ"))
+                {
+                    if (!(this.value.Length.Equals(3) && this.value.Substring(0, 2).ToLower().Equals(@"%q")))
+                    {
+                        throw new System.Exception(@"SETQ on Compiler Variable " + this.name + @" but the value in that variable is not a Q-Variable.");
+                    }
+
+                    do
+                    {
+                        int startIndex = r.IndexOf(this.name + @"SETQ");
+                        // remove the cvar name and the SETQ tag
+                        r = r.Remove(startIndex, this.name.Length + @"SETQ".Length);
+                        // starting at startIndex, jump over the ( and insert the q-register NUMBER ONLY, followed by a comma
+                        r = r.Insert(startIndex + 1, this.value.Substring(2, 1) + @",");
+                        // re-insert the term 'setq' at startIndex in all-lowercase
+                        r = r.Insert(startIndex, @"setq");
+                    } while (r.Contains(this.name + @"SETQ"));
+                }
+
+                if (r.Contains(this.name + @"SETR"))
+                {
+                    if (!(this.value.Length.Equals(3) && this.value.Substring(0, 2).ToLower().Equals(@"%q")))
+                    {
+                        throw new System.Exception(@"SETR on Compiler Variable " + this.name + @" but the value in that variable is not a Q-Variable.");
+                    }
+
+                    do
+                    {
+                        int startIndex = r.IndexOf(this.name + @"SETR");
+                        // remove the cvar name and the SETQ tag
+                        r = r.Remove(startIndex, this.name.Length + @"SETR".Length);
+                        // starting at startIndex, jump over the ( and insert the q-register NUMBER ONLY, followed by a comma
+                        r = r.Insert(startIndex + 1, this.value.Substring(2, 1) + @",");
+                        // re-insert the term 'setq' at startIndex in all-lowercase
+                        r = r.Insert(startIndex, @"setr");
+                    } while (r.Contains(this.name + @"SETR"));
+                }
+
                 r = r.Replace(this.name + @"UNSAFE", this.value);
                 r = r.Replace(this.name + @"SAFE", @"objeval(%#," + this.value + @")");
                 r = r.Replace(this.name + @"LIT", @"lit(" + this.value + @")");

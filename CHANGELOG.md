@@ -99,3 +99,11 @@ Of course you're welcome to use the same parameter lead-character for everything
 # 2018-02-09
 
 * Added cVar replacement to INCLUDE directive processing, so for example a static directory path may be set into a cVar and re-used repeatedly for multiple file includes (and passed into those included files as cVars traverse INCLUDE boundaries)
+
+# 2018-02-10
+
+* Added compiler variable SETQ and SETR options, providing the facility to easily declare any compiler variable containing a q-register and then automatically set that register by pre-compiler name.
+
+    @@ CDIR bvar bvMyBlockVariable = %q0
+    @@
+    &myFunctionAttribute myObject=[bvMyBlockVariableSETQ(add(2,5))][%q0]
