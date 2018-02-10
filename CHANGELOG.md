@@ -104,6 +104,6 @@ Of course you're welcome to use the same parameter lead-character for everything
 
 * Added compiler variable SETQ and SETR options, providing the facility to easily declare any compiler variable containing a q-register and then automatically set that register by pre-compiler name.
 
-    @@ CDIR bvar bvMyBlockVariable = %q0
-    @@
-    &myFunctionAttribute myObject=[bvMyBlockVariableSETQ(add(2,5))][%q0]
+@@ CDIR bvar bvMyBlockVariable = %q0
+@@
+&myFunctionAttribute myObject=[bvMyBlockVariableSETQ(add(2,5))][%q0]
