@@ -16,7 +16,7 @@ namespace mushCompiler
     /// uploaded through your client or copy and pasted via manual @emit for future/repeat retrieval.  
     /// 
     /// If your intention is to use ASCII art in a connect.txt or other "hard" file that the MUSH reads from disk and transmits to 
-    /// users directly, DO NOT COMPILE IN ANY WAY, SHAPE, OR FORM!  Compiles perform replacements and escapes which you simply don't 
+    /// users directly, DO NOT COMPILE IN ANY WAY, SHAPE, OR FORM!  Compiles perform replacements and cArr which you simply don't 
     /// want in this case.
     /// </summary>
     class asciiCompilerClass
@@ -77,7 +77,7 @@ namespace mushCompiler
         /// uploaded through your client or copy and pasted via manual @emit for future/repeat retrieval.  
         /// 
         /// If your intention is to use ASCII art in a connect.txt or other "hard" file that the MUSH reads from disk and transmits to 
-        /// users directly, DO NOT COMPILE IN ANY WAY, SHAPE, OR FORM!  Compiles perform replacements and escapes which you simply don't 
+        /// users directly, DO NOT COMPILE IN ANY WAY, SHAPE, OR FORM!  Compiles perform replacements and cArr which you simply don't 
         /// want in this case.
         /// </param>
         internal void doCompile(string asciiInFile, string asciiOutFile, int compileType)

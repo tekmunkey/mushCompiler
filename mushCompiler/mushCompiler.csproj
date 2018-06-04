@@ -54,7 +54,10 @@
   <ItemGroup>
     <Compile Include="asciiCompilerClass.cs" />
     <Compile Include="compilerVariableClass.cs" />
+    <Compile Include="mushCode\characters.cs" />
+    <Compile Include="mushCode\muFunctionClass.cs" />
     <Compile Include="mushCompilerClass_OLD.cs" />
+    <Compile Include="mushDecompilerClass.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="programArgsClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

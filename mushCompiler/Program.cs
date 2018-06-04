@@ -6,9 +6,12 @@ namespace mushCompiler
 {
     class Program
     {
-        internal const int COMPILE_TYPE_CODE  = 0x00000000;
-        internal const int COMPILE_TYPE_ASCII_SINGLELINE = 0x00000001;
-        internal const int COMPILE_TYPE_ASCII_MULTILINE = 0x00000002;
+        internal const int COMPILE_TYPE_CODE  =            0x00000000;
+        internal const int COMPILE_TYPE_DECOMPILE_CODE =   0x00000001;
+        internal const int COMPILE_TYPE_ASCII_SINGLELINE = 0x00010000;
+        internal const int COMPILE_TYPE_ASCII_MULTILINE =  0x00020000;
+
+        
 
         /// <summary>
         /// Converts an integer value such as COMPILE_TYPE_CODE to a string value suitable for output.
@@ -24,7 +27,11 @@ namespace mushCompiler
             string r = "Invalid Type Specifier";
             if (compileTypeConst == COMPILE_TYPE_CODE)
             {
-                r = @"MUSH Code";
+                r = @"Compile MUSH Code";
+            }
+            else if (compileTypeConst == COMPILE_TYPE_DECOMPILE_CODE)
+            {
+                r = @"Decompile MUSH Code";
             }
             else if (compileTypeConst == COMPILE_TYPE_ASCII_SINGLELINE)
             {
@@ -34,6 +41,7 @@ namespace mushCompiler
             {
                 r = @"ASCII Multi Line";
             }
+            
             return r;
         }
 
@@ -88,6 +96,11 @@ namespace mushCompiler
                             compileType = COMPILE_TYPE_CODE;
                             typeFound = true;
                         }
+                        else if (argValue.Equals(@"decompile") || argValue.Equals(@"decomp") || argValue.Equals(@"decompcode"))
+                        {
+                            compileType = COMPILE_TYPE_DECOMPILE_CODE;
+                            typeFound = true;
+                        }
                         else if (argValue.Equals(@"ascii") || argValue.Equals(@"ascii-single") || argValue.Equals(@"ascii-singleline"))
                         {
                             compileType = COMPILE_TYPE_ASCII_SINGLELINE;
@@ -98,6 +111,7 @@ namespace mushCompiler
                             compileType = COMPILE_TYPE_ASCII_MULTILINE;
                             typeFound = true;
                         }
+                        
 
                         if (!typeFound)
                         {
@@ -216,7 +230,51 @@ namespace mushCompiler
 
                     mcc = null;
                 }
-                else if (compileType > 0) // 0 is code - everything greater is ASCII-something-something
+                else if (compileType == COMPILE_TYPE_DECOMPILE_CODE)
+                {
+                    StreamReader sr = new StreamReader(infile);
+                    mushDecompilerClass mdc = new mushDecompilerClass(infile);
+
+                    do
+                    {
+                        string rawCodeLine = sr.ReadLine();
+                        try
+                        {
+                            mdc.processCodeLine(rawCodeLine);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
+                            r = 1;
+                            break;
+                        }
+
+                    } while (!sr.EndOfStream);
+                    sr.Close();
+                    sr.Dispose();
+                    sr = null;
+
+                    string finalCode = mdc.DecompiledCode;
+
+                    StreamWriter sw = new StreamWriter(outfile);
+                    try
+                    {
+                        sw.Write(finalCode);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
+                        r = 1;
+                    }
+                    sw.Close();
+                    sw.Dispose();
+                    sw = null;
+
+                    mdc = null;
+                }
+                else if (compileType > 0x0000ffff) // The low order 2-bytes are code options - everything greater is ASCII-something-something
                 {
                     asciiCompilerClass acc = new asciiCompilerClass();
                     acc.doCompile(infile, outfile, compileType);
@@ -238,6 +296,7 @@ namespace mushCompiler
                 Console.WriteLine(@"    Errors detected in compile.  Press any key to continue.");
                 Console.ReadKey();
             }
+            
             return r;
         }
 

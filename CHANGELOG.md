@@ -106,6 +106,26 @@ Of course you're welcome to use the same parameter lead-character for everything
 
     @@ CDIR bvar bvMyBlockVariable = %q0
 
-    @@
-
     &myFunctionAttribute myObject=[bvMyBlockVariableSETQ(add(2,5))][%q0]
+
+# 2018-05-30
+
+* Fixed a bug that mangled cVar/bVar names/replacements when there was no space preceding the = in the Var definition line.
+
+* Modded the AddonFunc behavior/signature to help differentiate var names from addon functions
+
+    @@ CDIR bvar bvMyBlockVariable = %q0
+
+    &myFunctionAttribute myObject=[bvMyBlockVariable.SETQ(add(2,5))][%q0]
+
+# 2018-06-02
+
+* Added mushDecompilerClass
+
+* Added mushCode directory/namespace to project
+
+* Added mushCode.muFunctionClass 
+
+* Added mushCode.characters (a static class)
+
+* Added commandline options (--compiletype=option) "decompile" and "decomp" and "decompcode" to refer to softcode decompile/deformat/explode operation.
