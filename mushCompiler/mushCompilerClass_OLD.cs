@@ -559,6 +559,8 @@ namespace mushCompiler
                     //        cVars must evaluate all other (previously existing) cVars, and bVars must evaluate all previously existing cVars and also 
                     //        bVars
                     bv.value = replaceCVars(bv.value);
+                    bv.value = replaceParams(bv.value);
+                    bv.value = replaceQVars(bv.value);
                     bv.value = replaceBVars(bv.value);
                     //
                     // ISSUE:  
