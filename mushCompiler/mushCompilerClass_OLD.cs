@@ -631,6 +631,9 @@ namespace mushCompiler
 
                     paramsType = null;
                     GC.Collect();
+
+                    // Finally we inject a params comment into the compiled codeline, following the MUSH standard @@ 
+                    compiledCodeString += @"@@ " + compilerDirective + System.Environment.NewLine;
                 }
             }
             return r;
@@ -885,7 +888,8 @@ namespace mushCompiler
         // 
         // These are those terms.
         //
-        string needsTrailingSpacePattern = @"^.*("+ // opening the regex
+        // tekmunkey - changed ^.*( to ^\s*( because 'th' (short for think) was being caught on terms like WIDTH
+        string needsTrailingSpacePattern = @"^\s*("+ // opening the regex
                                                  // These lines can look confusing.  This string is a regex pattern itself, for System.Regex
                                                  //
                                                  // The outer @ leading each line tells C# to take the string LITERALLY - no compiler 
@@ -1065,6 +1069,11 @@ namespace mushCompiler
         /// </returns>
         public string processCodeLine(string codeLine)
         {
+            if (this.filePath.Contains(@"troubleshoot") && codeLine.Contains( @"getTableScreenWidth") )
+            {
+                int bp = 0;
+            }
+
             string r = string.Empty;
 
             // empty/blank text files caused program crashes.  problem solved.

@@ -104,6 +104,12 @@ namespace mushCompiler
                     r = r.Insert(startIndex, cvarAddonFunc.ToLower().Substring(1));
                 } while (r.Contains(this.name + cvarAddonFunc));
             }
+
+            if (this.name == "bOutput")
+            {
+                int bp = 0;
+            }
+
             return r;
         }
 
