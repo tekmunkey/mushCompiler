@@ -485,6 +485,13 @@ namespace mushCompiler
                     // don't even try an if/else addition in the loop above - it gets too complex with multiple possible cVar declarations per file
                     this.cvarsList.Add(cv);
                     //
+                    // ISSUE:
+                    //        When processing cVar/bVar directives, we sometimes need to include other c/b variable values into a macro-style definition.
+                    // SOLUTION:
+                    //        cVars must evaluate all other (previously existing) cVars, and bVars must evaluate all previously existing cVars and also 
+                    //        bVars
+                    cv.value = replaceCVars(cv.value);
+                    //
                     // ISSUE:  
                     //        When a user declares similar variable names such as cvText and cvTextAlign, with the shorter version declared earlier, 
                     //        replacement overwrites part of cvTextAlign.  ie:  if the value of cvText is %0 then occurrences of cvTextAlign become 
@@ -545,6 +552,14 @@ namespace mushCompiler
                     }
                     // don't even try an if/else addition in the loop above - it gets too complex with multiple possible bVar declarations per codeblock
                     this.bvarsList.Add(bv);
+                    //
+                    // ISSUE:
+                    //        When processing cVar/bVar directives, we sometimes need to include other c/b variable values into a macro-style definition.
+                    // SOLUTION:
+                    //        cVars must evaluate all other (previously existing) cVars, and bVars must evaluate all previously existing cVars and also 
+                    //        bVars
+                    bv.value = replaceCVars(bv.value);
+                    bv.value = replaceBVars(bv.value);
                     //
                     // ISSUE:  
                     //        When a user declares similar variable names such as bvText and bvTextAlign, with the shorter version declared earlier, 
